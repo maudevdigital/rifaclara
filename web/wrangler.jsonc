@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "rifaclara-web",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  // Única entrada pública. Crea el registro DNS en la zona maudev.cl al desplegar.
+  "routes": [{ "pattern": "rifaclara.maudev.cl", "custom_domain": true }],
+  // /api/* se reenvía a rifaclara-api sin salir a internet.
+  "services": [{ "binding": "API", "service": "rifaclara-api" }],
+  "observability": { "enabled": true }
+}

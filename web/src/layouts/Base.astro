@@ -1,0 +1,44 @@
+---
+import "../styles/global.css";
+import Logo from "../components/Logo.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="es_CL" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  </head>
+  <body class="min-h-dvh">
+    <header class="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+      <Logo />
+      <nav class="flex items-center gap-6 text-sm text-muted" aria-label="Principal">
+        <a class="rounded-lg bg-accent px-4 py-2.5 font-semibold text-accent-ink hover:brightness-110" href="/#pronto">Muy pronto</a>
+      </nav>
+    </header>
+    <main class="mx-auto max-w-6xl px-5">
+      <slot />
+    </main>
+    <footer class="mx-auto mt-24 flex max-w-6xl flex-wrap justify-between gap-4 border-t border-line px-5 py-8 text-sm text-muted">
+      <span>Rifa Clara · rifas con sorteo verificable</span>
+      <a class="hover:text-ink" href="https://maudev.cl">Hecho por Maudev</a>
+    </footer>
+  </body>
+</html>

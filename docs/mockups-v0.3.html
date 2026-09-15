@@ -1,0 +1,1144 @@
+<title>Rifa Clara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Onest:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F5F6FA; --surface:#FFFFFF; --sunk:#ECEEF5;
+  --ink:#171A3D; --muted:#5A5F7E; --line:#D9DCE8;
+  --accent:#2F3AB2; --accent-ink:#FFFFFF; --accent-soft:#E4E6FA;
+  --ticket:#F2C230; --ticket-ink:#2A2200; --ticket-soft:#FBEFC4;
+  --paid:#1F8A5B; --paid-soft:#DDF1E6;
+  --held:#B86E0C; --held-soft:#FBE9CF;
+  --risk:#B3263C; --risk-soft:#F8E0E4;
+  --taken:#C9CCDA;
+  --display:"Big Shoulders Display","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --shadow:0 1px 2px rgba(23,26,61,.06),0 8px 24px rgba(23,26,61,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1127; --surface:#171A36; --sunk:#1E2244;
+    --ink:#ECEEF9; --muted:#A3A8C8; --line:#2C3160;
+    --accent:#9AA4FF; --accent-ink:#11143A; --accent-soft:#252B5E;
+    --ticket:#F2C230; --ticket-ink:#2A2200; --ticket-soft:#3A3212;
+    --paid:#5FCF97; --paid-soft:#173A2C;
+    --held:#F0A64A; --held-soft:#3D2A10;
+    --risk:#FF8095; --risk-soft:#43182A;
+    --taken:#3A3F6E;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1127; --surface:#171A36; --sunk:#1E2244;
+  --ink:#ECEEF9; --muted:#A3A8C8; --line:#2C3160;
+  --accent:#9AA4FF; --accent-ink:#11143A; --accent-soft:#252B5E;
+  --ticket:#F2C230; --ticket-ink:#2A2200; --ticket-soft:#3A3212;
+  --paid:#5FCF97; --paid-soft:#173A2C;
+  --held:#F0A64A; --held-soft:#3D2A10;
+  --risk:#FF8095; --risk-soft:#43182A;
+  --taken:#3A3F6E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--body);margin:0;padding-inline:20px;padding-block:28px 80px}
+.wrap{max-width:1100px;margin:0 auto}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:800 clamp(30px,4vw,40px)/1.05 var(--display);letter-spacing:.01em;text-transform:uppercase}
+h3{font:600 18px/1.3 var(--body)}
+p{margin:0}
+.prose{max-width:68ch;display:grid;gap:14px}
+.prose p,.prose li{color:var(--ink)}
+.muted{color:var(--muted)}
+.label{font:600 11.5px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--sunk);padding:.1em .35em;border-radius:4px}
+
+/* ---------- Header: talonario ---------- */
+.stub{display:grid;grid-template-columns:1fr auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.stub-main{padding:28px 30px 26px;display:grid;gap:14px}
+.stub-side{position:relative;width:170px;padding:24px 20px;display:grid;align-content:space-between;gap:12px;background:var(--ticket);color:var(--ticket-ink)}
+.stub-side::before{content:"";position:absolute;left:-1px;top:10px;bottom:10px;border-left:2px dashed var(--line)}
+.stub-side .n{font:800 64px/.9 var(--display);letter-spacing:.02em}
+.stub-side .label{color:var(--ticket-ink);opacity:.75}
+.stub h1{font:800 clamp(44px,7vw,76px)/.92 var(--display);text-transform:uppercase;letter-spacing:.01em}
+.stub h1 em{font-style:normal;color:var(--accent)}
+.lede{font-size:18px;max-width:60ch;color:var(--ink)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+nav.toc a{font-size:13.5px;text-decoration:none;color:var(--ink);padding:6px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:640px){
+  .stub{grid-template-columns:1fr}
+  .stub-side{width:auto;grid-template-columns:auto 1fr;align-items:end}
+  .stub-side::before{left:10px;right:10px;top:-1px;bottom:auto;border-left:0;border-top:2px dashed var(--line)}
+  .stub-main{padding:22px 20px}
+}
+
+section{margin-top:72px;display:grid;gap:22px;scroll-margin-top:20px}
+.sec-head{display:grid;gap:8px}
+
+/* ---------- decisiones ---------- */
+.decisions{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.dec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 18px 20px;display:grid;gap:10px;align-content:start}
+.dec .tag{justify-self:start}
+.dec p{font-size:14.5px;color:var(--muted)}
+.dec p b{color:var(--ink);font-weight:600}
+.tag{display:inline-flex;align-items:center;gap:6px;font:600 11.5px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:6px}
+.tag.go{background:var(--paid-soft);color:var(--paid)}
+.tag.warn{background:var(--held-soft);color:var(--held)}
+.tag.no{background:var(--risk-soft);color:var(--risk)}
+.tag.info{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- flujo ---------- */
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.flow li{padding:16px 16px 18px;display:grid;gap:6px;align-content:start;border-right:1px dashed var(--line);border-bottom:1px dashed var(--line);margin-right:-1px;margin-bottom:-1px}
+.flow .step{font:800 30px/1 var(--display);color:var(--accent)}
+.flow .who{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.flow p{font-size:14px;color:var(--muted)}
+.flow h3{font-size:15.5px}
+
+/* ---------- comparativa ---------- */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font:600 11.5px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sunk);white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.pick td{background:var(--accent-soft)}
+tr.pick td:first-child{font-weight:600}
+
+/* ---------- algoritmo ---------- */
+.algo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.algo{grid-template-columns:1fr}}
+pre{margin:0;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;font:400 13px/1.6 var(--mono);color:var(--ink)}
+pre .c{color:var(--muted)}
+pre .k{color:var(--accent);font-weight:500}
+ol.plain{margin:0;padding-left:20px;display:grid;gap:10px}
+ol.plain li::marker{font-family:var(--display);font-weight:800;color:var(--accent)}
+.note{border-left:3px solid var(--held);background:var(--held-soft);padding:12px 14px;border-radius:0 8px 8px 0;font-size:14.5px}
+.note b{color:var(--ink)}
+
+/* ---------- mockups ---------- */
+.screens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 20px;align-items:start}
+.screen{display:grid;gap:10px;justify-items:center}
+.screen figcaption{max-width:340px;width:100%;font-size:13.5px;color:var(--muted)}
+.screen figcaption b{color:var(--ink);font-weight:600;display:block;font-size:14.5px}
+figure{margin:0}
+.phone{width:340px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow);padding:10px;position:relative}
+.phone-in{border-radius:22px;overflow:hidden;background:var(--paper);height:640px;display:flex;flex-direction:column;border:1px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px;font:500 11px/1 var(--body);color:var(--muted)}
+.app{font-family:var(--body);color:var(--ink);font-size:13.5px;line-height:1.45}
+.scroll{overflow-y:auto;flex:1;display:grid;align-content:start;gap:14px;padding:4px 14px 16px}
+.brand{display:flex;align-items:center;gap:8px;font:800 19px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.brand i{display:inline-grid;place-items:center;width:22px;height:22px;background:var(--ticket);color:var(--ticket-ink);border-radius:5px;font-style:normal;font-size:13px}
+.appbar{display:flex;justify-content:space-between;align-items:center;padding:6px 14px 10px;border-bottom:1px solid var(--line)}
+.btn{font:600 13px/1 var(--body);border:0;border-radius:9px;padding:11px 14px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.sm{padding:7px 10px;font-size:12px;border-radius:7px}
+.btn.ticket{background:var(--ticket);color:var(--ticket-ink)}
+.btn:hover{filter:brightness(1.06)}
+.prize{border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.prize-img{height:120px;background:
+  radial-gradient(circle at 28% 40%,var(--ticket) 0 18%,transparent 19%),
+  radial-gradient(circle at 72% 62%,var(--accent) 0 14%,transparent 15%),
+  repeating-linear-gradient(135deg,var(--sunk) 0 10px,var(--paper) 10px 20px);display:grid;place-items:end start;padding:10px}
+.prize-img span{background:var(--surface);color:var(--ink);font-size:11px;font-weight:600;padding:4px 7px;border-radius:5px}
+.prize-body{padding:12px;display:grid;gap:8px}
+.prize-body h4{margin:0;font:800 24px/1 var(--display);text-transform:uppercase}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.price{font:800 22px/1 var(--display)}
+.prog{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.prog b{display:block;height:100%;background:var(--paid);border-radius:99px}
+.small{font-size:12px;color:var(--muted)}
+.trust{display:flex;gap:8px;align-items:flex-start;background:var(--accent-soft);border-radius:10px;padding:9px 10px;font-size:12px;color:var(--ink)}
+.trust svg{flex:none;margin-top:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.cell{aspect-ratio:1;border-radius:6px;font:600 12px/1 var(--mono);display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;padding:0;font-variant-numeric:tabular-nums}
+.cell.paid{background:var(--taken);border-color:transparent;color:var(--muted);cursor:not-allowed;text-decoration:line-through}
+.cell.held{background:repeating-linear-gradient(135deg,var(--held-soft) 0 4px,var(--surface) 4px 8px);border-color:var(--held);color:var(--held);cursor:not-allowed}
+.cell.sel{background:var(--ticket);border-color:var(--ticket);color:var(--ticket-ink)}
+.cell:not(.paid):not(.held):hover{border-color:var(--accent)}
+.sheet{border-top:1px solid var(--line);background:var(--surface);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet .sum{display:grid;gap:2px}
+.sheet .sum b{font:800 20px/1 var(--display)}
+.field{display:grid;gap:5px}
+.field .fl{font-size:12px;font-weight:600}
+.field .in{border:1px solid var(--input,var(--line));background:var(--surface);border-radius:8px;padding:9px 10px;font-size:13.5px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 12px/1 var(--mono);background:var(--ticket);color:var(--ticket-ink);padding:6px 8px;border-radius:6px}
+.turn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12px;background:var(--surface)}
+.turn .ok{width:18px;height:18px;border-radius:50%;background:var(--paid);display:grid;place-items:center;color:#fff;font-size:11px}
+.receipt{background:var(--surface);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden}
+.receipt-top{padding:12px;display:grid;gap:8px}
+.receipt-cut{border-top:2px dashed var(--line);margin:0 12px}
+.receipt-bot{padding:12px;display:grid;gap:6px;background:var(--sunk)}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+.kv span{color:var(--muted)}
+.kv b{font-weight:600;text-align:right}
+.code{font:800 30px/1 var(--display);letter-spacing:.06em}
+.steps{display:flex;gap:4px}
+.steps i{flex:1;height:4px;border-radius:9px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg span{text-align:center;padding:9px 0;font:600 13px/1 var(--mono);border-right:1px solid var(--line);background:var(--surface)}
+.seg span:last-child{border-right:0}
+.seg span.on{background:var(--accent);color:var(--accent-ink)}
+.calc{background:var(--ticket-soft);border-radius:10px;padding:10px 12px;display:grid;gap:4px}
+.calc .kv span{color:var(--ink);opacity:.75}
+.winner{background:var(--ticket);color:var(--ticket-ink);border-radius:14px;padding:16px;display:grid;gap:4px;text-align:center}
+.winner .big{font:800 72px/.9 var(--display)}
+.hash{font:400 11px/1.45 var(--mono);word-break:break-all;color:var(--ink);background:var(--sunk);border-radius:7px;padding:7px 8px}
+.vlog{font:400 11px/1.5 var(--mono);background:var(--ink);color:var(--paper);border-radius:8px;padding:9px 10px;min-height:64px;white-space:pre-wrap;word-break:break-all}
+.vlog .okt{color:var(--paid)}
+
+/* desktop frame */
+.desk{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.desk-bar{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--sunk)}
+.desk-bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.desk-bar .url{margin-left:10px;font:400 12px/1 var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:5px 10px;border-radius:6px;flex:1;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desk-scroll{overflow-x:auto}
+.desk-in{min-width:860px;display:grid;grid-template-columns:190px 1fr;background:var(--paper)}
+.side{border-right:1px solid var(--line);padding:14px;display:grid;gap:4px;align-content:start;background:var(--surface)}
+.side a{display:block;padding:8px 10px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:13px}
+.side a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.dmain{padding:18px 20px 22px;display:grid;gap:16px;align-content:start}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;display:grid;gap:4px}
+.kpi b{font:800 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;font:600 11px/1 var(--body);padding:5px 7px;border-radius:99px}
+.pill.held{background:var(--held-soft);color:var(--held)}
+.pill.paid{background:var(--paid-soft);color:var(--paid)}
+.pill.exp{background:var(--risk-soft);color:var(--risk)}
+.dtable{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.dtable table{font-size:13px}
+.dtable td,.dtable th{padding:9px 12px}
+.adslot{border:1.5px dashed var(--muted);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--muted);font:600 11px/1.3 var(--body);letter-spacing:.08em;text-transform:uppercase;padding:10px;background:repeating-linear-gradient(45deg,transparent 0 8px,var(--sunk) 8px 16px)}
+.tool{display:grid;grid-template-columns:1fr 200px;gap:18px;padding:20px;background:var(--paper);min-width:860px}
+.tool h4{margin:0;font:800 34px/1 var(--display);text-transform:uppercase}
+.ta{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;font:400 13px/1.7 var(--mono);height:150px;overflow:hidden;color:var(--ink)}
+.crumbs{font-size:12px;color:var(--muted)}
+
+/* ---------- stack, data, rutas ---------- */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:12px;align-content:start}
+ul.clean{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+ul.clean li{display:grid;grid-template-columns:140px 1fr;gap:12px;font-size:14px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+ul.clean li:last-child{border-bottom:0;padding-bottom:0}
+ul.clean li span:first-child{font-weight:600}
+ul.clean li span:last-child{color:var(--muted)}
+@media (max-width:480px){ul.clean li{grid-template-columns:1fr;gap:2px}}
+ul.dots{margin:0;padding-left:18px;display:grid;gap:8px;font-size:14.5px}
+ul.dots li::marker{color:var(--accent)}
+
+/* ---------- roadmap ---------- */
+.road{display:grid;gap:0;border-left:2px solid var(--line);margin-left:10px}
+.phase{position:relative;padding:0 0 26px 26px;display:grid;gap:8px}
+.phase:last-child{padding-bottom:0}
+.phase::before{content:"";position:absolute;left:-9px;top:3px;width:16px;height:16px;border-radius:4px;background:var(--surface);border:2px solid var(--accent)}
+.phase.first::before{background:var(--ticket);border-color:var(--ticket)}
+.phase .when{font:600 12px/1 var(--mono);color:var(--accent)}
+.phase h3{font:800 24px/1.05 var(--display);text-transform:uppercase}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14.5px;color:var(--muted);max-width:70ch}
+.phase .done{font-size:13.5px;color:var(--ink)}
+.phase .done b{color:var(--paid)}
+
+/* ---------- preguntas ---------- */
+.qs{display:grid;gap:10px;counter-reset:q}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+.q::before{counter-increment:q;content:counter(q);grid-row:span 2;font:800 30px/1 var(--display);color:var(--ticket-ink);background:var(--ticket);width:40px;height:40px;border-radius:8px;display:grid;place-items:center}
+.q b{font-weight:600}
+.q span{color:var(--muted);font-size:14.5px}
+footer{margin-top:64px;padding-top:18px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+.decisions.six{grid-template-columns:repeat(3,minmax(0,1fr))}
+.plans{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.plan.hl{border-color:var(--accent);box-shadow:var(--shadow)}
+.plan .p{font:800 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.plan .p small{font:500 13px/1 var(--body);color:var(--muted)}
+.plan ul{margin:0;padding-left:16px;display:grid;gap:4px;font-size:13.5px;color:var(--muted)}
+.plan .eq{font-size:12.5px;color:var(--ink);background:var(--ticket-soft);border-radius:7px;padding:7px 9px}
+.src{font-size:12.5px;color:var(--muted)}
+@media (max-width:980px){.decisions.six{grid-template-columns:repeat(2,minmax(0,1fr))}.plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.decisions.six,.plans{grid-template-columns:1fr}}
+.arch{display:grid;grid-template-columns:minmax(0,.8fr) auto minmax(0,1.2fr) auto minmax(0,1.2fr) auto minmax(0,.9fr);align-items:stretch}
+.node{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:6px;align-content:start}
+.node.web{border:2px solid var(--accent)}
+.node.api{border:2px solid var(--ink)}
+.node b{font:800 22px/1 var(--display);text-transform:uppercase;letter-spacing:.01em}
+.node ul{margin:0;padding-left:16px;font-size:13px;color:var(--muted);display:grid;gap:3px}
+.link{display:grid;place-items:center;align-content:center;gap:4px;padding:0 10px;text-align:center;font:500 11px/1.3 var(--mono);color:var(--muted);max-width:120px}
+.link .ar{font:800 26px/1 var(--display);color:var(--accent)}
+@media (max-width:900px){.arch{grid-template-columns:1fr}.link{max-width:none;padding:8px 0;grid-auto-flow:column;gap:10px}.link .ar{transform:rotate(90deg)}}
+.tree{font:400 12.5px/1.65 var(--mono)}
+.tree .c{color:var(--muted)}
+@media (max-width:760px){.screens{grid-template-columns:1fr}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.flow{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="stub">
+    <div class="stub-main">
+      <span class="label">Proyecto Maudev · plan de producto v0.3 · 15 sep 2026</span>
+      <h1>Rifa <em>Clara</em></h1>
+      <p class="lede">Plataforma gratuita para organizar rifas online, primero en Chile y después en otros países de habla hispana, con un sorteo que <b>cualquiera puede verificar</b>. El organizador cobra directo; nosotros ponemos la grilla, los boletos, el control de pagos y un sorteo imposible de arreglar.</p>
+      <div class="meta">
+        <span><b>Dominio:</b> rifaclara.maudev.cl</span>
+        <span><b>Alcance:</b> solo Chile en la fase 1</span>
+        <span><b>Código:</b> rifas-web + rifas-api</span>
+        <span><b>Stack:</b> Astro + Hono en Cloudflare Workers + D1</span>
+        <span><b>Costo de operación:</b> $0</span>
+        <span><b>Ingresos:</b> AdSense + pago por rifa</span>
+      </div>
+    </div>
+    <div class="stub-side" aria-hidden="true">
+      <span class="label">N° de boleto</span>
+      <span class="n">001</span>
+      <span class="label">Valor $0 · Sorteo verificable</span>
+    </div>
+  </div>
+  <nav class="toc" aria-label="Secciones">
+    <a href="#decisiones">Decisiones</a>
+    <a href="#flujo">Flujo</a>
+    <a href="#sorteo">Sorteo verificable</a>
+    <a href="#cripto">Cripto</a>
+    <a href="#cobro">Cuánto cobrar</a>
+    <a href="#global">Global</a>
+    <a href="#mockups">Mockups</a>
+    <a href="#arquitectura">Dos repos</a>
+    <a href="#stack">Stack y costos</a>
+    <a href="#datos">Datos y rutas</a>
+    <a href="#seo">SEO y AdSense</a>
+    <a href="#seguridad">Seguridad</a>
+    <a href="#fases">Fases</a>
+    <a href="#preguntas">Por decidir</a>
+  </nav>
+</header>
+
+<!-- ============ DECISIONES ============ -->
+<section id="decisiones">
+  <div class="sec-head">
+    <span class="label">Antes de escribir código</span>
+    <h2>Decisiones que definen el producto</h2>
+  </div>
+  <div class="decisions six">
+    <article class="dec">
+      <span class="tag go">Decidido</span>
+      <h3>rifaclara.maudev.cl, solo Chile al inicio</h3>
+      <p>Subdominio gratis que suma autoridad a maudev.cl. La fase 1 apunta <b>solo a Chile</b> para darle a Google una señal limpia; otros países vienen cuando Chile funcione. Frontend y backend en <a href="#arquitectura">dos repos</a>.</p>
+    </article>
+    <article class="dec">
+      <span class="tag info">Recomendado para el MVP</span>
+      <h3>La plataforma no toca el dinero</h3>
+      <p>El participante reserva y le paga <b>directo al organizador</b> (transferencia, como hoy por WhatsApp). El organizador marca "pagado". No somos procesador de pagos ni banca de juego. El cobro por porcentaje queda como etapa opcional: ver <a href="#cobro">Cuánto cobrar</a>.</p>
+    </article>
+    <article class="dec">
+      <span class="tag info">Recomendado</span>
+      <h3>"Descentralizado" = sorteo verificable</h3>
+      <p>El azar sale de <b>drand</b>, un faro de aleatoriedad público operado por la League of Entropy (Cloudflare, Protocol Labs, universidades). Nadie, ni el organizador ni nosotros, conoce el resultado antes. Sin billetera cripto ni gas.</p>
+    </article>
+    <article class="dec">
+      <span class="tag info">Recomendado</span>
+      <h3>Cripto como medio de pago, no como motor</h3>
+      <p>El organizador puede recibir <b>USDT en su propia billetera</b>, igual que publica su cuenta bancaria. Un contrato que cobre boletos y pague premios nos convertiría en operadores de una lotería. Ver <a href="#cripto">Cripto</a>.</p>
+    </article>
+    <article class="dec">
+      <span class="tag warn">Ojo con AdSense</span>
+      <h3>Los anuncios van en herramientas y guías</h3>
+      <p>Google restringe los anuncios en contenido de <b>juegos de azar con dinero real</b>. Las páginas de rifa pueden quedar con anuncios limitados; el ingreso debe venir de las herramientas gratuitas (sorteos, ruleta, talonarios) y las guías, que además son las que posicionan.</p>
+    </article>
+    <article class="dec">
+      <span class="tag no">Consultar abogado</span>
+      <h3>La ley cambia en cada país</h3>
+      <p>En Chile las loterías tienen regulación especial y las rifas con fines de lucro son zona gris; en otros países hay permisos distintos. No mover dinero reduce el riesgo, pero <b>no lo elimina</b>. Términos claros: la plataforma es una herramienta y el organizador responde por cumplir la ley de su país y entregar el premio.</p>
+    </article>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Opción para el azar</th><th>¿Verificable?</th><th>Costo</th><th>Experiencia del usuario</th><th>Veredicto</th></tr></thead>
+      <tbody>
+        <tr><td>Servidor con <code>Math.random()</code></td><td>No, hay que confiar en nosotros</td><td class="num">$0</td><td>Simple</td><td>Descartado: es justo lo que la gente desconfía</td></tr>
+        <tr><td>Contrato inteligente + Chainlink VRF</td><td>Sí, 100 % en cadena</td><td class="num">Gas por sorteo</td><td>Billetera cripto, pagos en tokens</td><td>Descartado para el MVP: mata la adopción masiva y agrega riesgo legal</td></tr>
+        <tr class="pick"><td>drand + compromiso previo + OpenTimestamps</td><td>Sí, desde cualquier navegador</td><td class="num">$0</td><td>Igual que una web normal</td><td>Elegido</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ FLUJO ============ -->
+<section id="flujo">
+  <div class="sec-head">
+    <span class="label">Recorrido completo</span>
+    <h2>De la idea al ganador</h2>
+    <p class="muted" style="max-width:68ch">El organizador necesita cuenta; el participante no. Reserva con nombre y WhatsApp, y recibe un boleto con código.</p>
+  </div>
+  <ol class="flow">
+    <li><span class="step">1</span><span class="who">Organizador</span><h3>Crea la rifa</h3><p>Premio, foto, 100 números a $2.000, fecha de cierre y datos de transferencia.</p></li>
+    <li><span class="step">2</span><span class="who">Organizador</span><h3>Comparte el enlace</h3><p>Por WhatsApp e Instagram, con vista previa generada (imagen OG con el premio).</p></li>
+    <li><span class="step">3</span><span class="who">Participante</span><h3>Elige y reserva</h3><p>Toca sus números en la grilla. Quedan reservados 24 h. Recibe su boleto <code>RC-7K2M</code>.</p></li>
+    <li><span class="step">4</span><span class="who">Participante</span><h3>Paga al organizador</h3><p>Transfiere y manda el comprobante por WhatsApp con un mensaje ya escrito.</p></li>
+    <li><span class="step">5</span><span class="who">Organizador</span><h3>Confirma el pago</h3><p>Marca "pagado" en su panel. Las reservas vencidas se liberan solas.</p></li>
+    <li><span class="step">6</span><span class="who">Sistema</span><h3>Cierra y se compromete</h3><p>Congela la lista, publica su huella SHA-256 y fija una ronda futura de drand.</p></li>
+    <li><span class="step">7</span><span class="who">Sistema</span><h3>Sortea</h3><p>Llega la ronda, se lee el número aleatorio público y se calcula el ganador.</p></li>
+    <li><span class="step">8</span><span class="who">Cualquiera</span><h3>Verifica</h3><p>Recalcula el resultado en su navegador y comprueba que su boleto estaba en la lista.</p></li>
+  </ol>
+</section>
+
+<!-- ============ SORTEO ============ -->
+<section id="sorteo">
+  <div class="sec-head">
+    <span class="label">El corazón del producto</span>
+    <h2>Cómo se hace un sorteo imposible de arreglar</h2>
+  </div>
+  <div class="algo">
+    <div class="prose">
+      <ol class="plain">
+        <li><b>Congelar.</b> Al cerrar, se ordenan los números pagados y cada uno se escribe como <code>número:sha256(código de boleto)</code>. El participante reconoce su línea sin exponer su nombre.</li>
+        <li><b>Comprometer.</b> Se publica la huella de esa lista y el número de una ronda de drand que ocurrirá minutos después. Ejemplo: cierre el 20 sep 2026 a las 20:00 (Chile) → ronda <code>32380712</code> de <em>quicknet</em>, que emite un valor cada 3 segundos.</li>
+        <li><b>Anclar.</b> La huella se sella en Bitcoin con OpenTimestamps (gratis). Así ni la plataforma puede cambiar la lista después.</li>
+        <li><b>Sortear.</b> Cuando llega la ronda, se lee su valor aleatorio desde dos relays (<code>api.drand.sh</code> y <code>drand.cloudflare.com</code>) y se exige que coincidan.</li>
+        <li><b>Calcular.</b> Ganador = <code>sha256(azar:rifa:huella:premio) mod cantidad</code>. Para varios premios se repite quitando a los que ya ganaron.</li>
+        <li><b>Publicar.</b> La página del sorteo muestra todo y trae un verificador que corre en el navegador, incluida la firma BLS de drand.</li>
+      </ol>
+      <p class="note"><b>Qué garantiza y qué no.</b> Garantiza que nadie eligió al ganador. No garantiza que el organizador entregue el premio ni que no se haya comprado números a sí mismo. Para eso: lista pública de números pagados (con nombres enmascarados), reputación del organizador y botón de denuncia.</p>
+    </div>
+<pre><span class="c">// Mismo código en el Worker y en el verificador público</span>
+<span class="k">async function</span> sortear({ azar, rifaId, lista, premios }) {
+  <span class="k">const</span> huella = <span class="k">await</span> sha256(lista.join(<span class="c">"\n"</span>));
+  <span class="k">const</span> quedan = [...lista];
+  <span class="k">const</span> ganadores = [];
+  <span class="k">for</span> (<span class="k">let</span> p = 0; p &lt; premios; p++) {
+    <span class="k">const</span> h = <span class="k">await</span> sha256(`${azar}:${rifaId}:${huella}:${p}`);
+    <span class="k">const</span> i = Number(BigInt(<span class="c">"0x"</span> + h) % BigInt(quedan.length));
+    ganadores.push(quedan.splice(i, 1)[0]);
+  }
+  <span class="k">return</span> { huella, ganadores };
+}
+
+<span class="c">// Ronda de drand quicknet para un instante t (segundos)</span>
+<span class="k">const</span> GENESIS = 1692803367, PERIODO = 3;
+<span class="k">const</span> ronda = (t) =&gt; Math.floor((t - GENESIS) / PERIODO) + 1;</pre>
+  </div>
+</section>
+
+<!-- ============ CRIPTO ============ -->
+<section id="cripto">
+  <div class="sec-head">
+    <span class="label">Opinión</span>
+    <h2>Cripto: sí como medio de pago, no como motor</h2>
+  </div>
+  <div class="prose">
+    <p>Un contrato inteligente resuelve de verdad un solo problema: que el organizador se quede con la plata. Y lo resuelve solo cuando el premio es dinero en la cadena. Si el premio es una bicicleta, un canasto o una gift card, la blockchain no puede obligar a nadie a entregarlo. La mayoría de las rifas de nuestro público (colegios, clubes, bomberos, emprendedores) son de ese tipo, y esa gente no tiene billetera cripto.</p>
+    <p>Donde cripto sí aporta es en países donde la gente ya paga con stablecoins, como Venezuela y Argentina. Ahí basta con dejar que el organizador publique su dirección USDT como publica su cuenta bancaria. No custodiamos nada y no cambia el riesgo legal.</p>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Nivel</th><th>Qué es</th><th>Riesgo para nosotros</th><th>Veredicto</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Sello en blockchain</td><td>La huella de la lista queda anclada en Bitcoin con OpenTimestamps</td><td>Ninguno, es gratis</td><td>Sí, fase 3</td></tr>
+        <tr class="pick"><td>USDT como medio de pago</td><td>El organizador muestra su dirección (Tron, Polygon, BNB Chain) y marca el pago como cualquier transferencia</td><td>Bajo: el dinero nunca pasa por nosotros</td><td>Sí, fase 5, con los países que ya lo usan</td></tr>
+        <tr><td>Contrato que cobra y paga</td><td>Pozo en USDC en una red barata (Base), boletos pagados al contrato, ganador con Chainlink VRF y pago automático</td><td>Alto: operamos una lotería, auditoría del contrato, controles antilavado y registro como proveedor cripto (Ley Fintec 21.521 en Chile)</td><td>No por ahora. Revisar con tracción y asesoría legal</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Además:</b> Google restringe los anuncios tanto en juegos de azar como en cripto. Juntar las dos cosas en el mismo sitio deja todavía menos espacio para AdSense.</p>
+</section>
+
+<!-- ============ COBRO ============ -->
+<section id="cobro">
+  <div class="sec-head">
+    <span class="label">Modelo de ingresos</span>
+    <h2>Cuánto cobrar</h2>
+    <p class="muted" style="max-width:68ch">Mientras el dinero no pase por la plataforma, no hay de dónde descontar un porcentaje. Por eso el cobro va en dos etapas: primero un pago fijo por rifa, después una comisión opcional si integramos pagos.</p>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Referencia del mercado</th><th>Modelo</th><th>Precio</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://www.rifalo.ar/blog/mejor-plataforma-para-hacer-rifas-online">Rifalo</a> (Argentina)</td><td>Comisión sobre venta, cobra con Mercado Pago Marketplace</td><td class="num">5 %</td></tr>
+        <tr><td>Plataformas argentinas, según Rifalo</td><td>Comisión sobre venta</td><td class="num">3 % a 10 %</td></tr>
+        <tr><td><a href="https://simplerifa.com/blog/categoria/sistema-de-rifas">Simple Rifa</a></td><td>Suscripción anual (precios desde julio 2026)</td><td class="num">USD 149 · 399 al año</td></tr>
+        <tr><td><a href="https://pagaturifa.com/">Paga Tu Rifa</a>, <a href="https://clubderifas.com/">Club de Rifas</a></td><td>Sin comisión por venta; cobran por plan</td><td class="num">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Etapa 1 · Pago fijo por rifa (desde la fase 4)</h3>
+  <div class="plans">
+    <div class="plan"><span class="label">Gratis</span><span class="p">$0</span>
+      <ul><li>1 rifa activa, hasta 100 números</li><li>1 premio</li><li>Sorteo verificable</li><li>Con anuncios</li></ul></div>
+    <div class="plan hl"><span class="label">Rifa Plus · por rifa</span><span class="p">$4.990 <small>CLP · USD 5</small></span>
+      <ul><li>Hasta 500 números, 3 premios</li><li>Sin anuncios</li><li>Talonario PDF con QR</li></ul>
+      <span class="eq">300 números a $2.000: equivale al 0,8 % de lo recaudado. Un 4 % serían $24.000.</span></div>
+    <div class="plan"><span class="label">Rifa Pro · por rifa</span><span class="p">$11.990 <small>CLP · USD 12</small></span>
+      <ul><li>Hasta 2.000 números</li><li>Premios ilimitados</li><li>Logo propio, CSV</li></ul>
+      <span class="eq">1.000 números a $3.000: 0,4 %. Un 4 % serían $120.000.</span></div>
+    <div class="plan"><span class="label">Organizaciones · mensual</span><span class="p">$9.990 <small>CLP · USD 10</small></span>
+      <ul><li>Rifas Pro ilimitadas</li><li>Varios administradores</li><li>Perfil verificado</li></ul></div>
+  </div>
+  <p class="muted" style="max-width:68ch;font-size:14.5px">El argumento de venta sale solo: <b style="color:var(--ink)">más barato que cualquier comisión</b> en cuanto la rifa supera los 100 números. Precios de partida para validar; se cobran con Flow en CLP y Lemon Squeezy en USD, previa confirmación de que ambos aceptan software de rifas.</p>
+
+  <h3>Etapa 2 · Comisión con pagos integrados (fase 6, opcional)</h3>
+  <div class="two">
+    <div class="prose" style="font-size:15px">
+      <p><b>Propuesta: 4 % sobre venta exitosa</b>, que el organizador activa rifa por rifa. Queda bajo el 5 % de Rifalo y en la parte baja del rango de 3 % a 10 %. No bajaría de 3 %: el cobro de Mercado Pago va encima, y el organizador lo va a comparar con recibir transferencias gratis.</p>
+      <p>Con Mercado Pago Marketplace el dinero cae en la cuenta del organizador y la comisión nos llega sola, sin custodiar nada.</p>
+    </div>
+    <div class="card">
+      <h3>Antes de activarlo</h3>
+      <ul class="dots">
+        <li>Confirmar que Mercado Pago permite rifas en tu rubro y en cada país: sus términos listan actividades prohibidas y pueden cerrar la cuenta sin aviso</li>
+        <li>Revisar si Marketplace está disponible en Chile o solo en otros países</li>
+        <li>Asesoría legal: al cobrar un porcentaje participamos de los ingresos de la rifa y la exposición sube</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GLOBAL ============ -->
+<section id="global">
+  <div class="sec-head">
+    <span class="label">Alcance · después de Chile</span>
+    <h2>Otros países, cuando Chile funcione</h2>
+    <p class="muted" style="max-width:68ch">La fase 1 sale solo para Chile: español de Chile, precios en CLP, guías y keywords chilenas y <code>lang="es-CL"</code>. Así el sitio le manda a Google una sola señal. La base de datos igual guarda país, moneda y zona horaria desde el primer día, para abrir otros países sin migraciones. Esta tabla es el plan para la <a href="#fases">fase 5</a>.</p>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>País</th><th>Moneda</th><th>Medios de pago en la plantilla</th><th>A tener en cuenta</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Chile</td><td class="num">CLP</td><td>Transferencia (cuenta RUT, cuenta corriente), link de Mercado Pago</td><td>Mercado inicial: guías, precios y soporte</td></tr>
+        <tr><td>México</td><td class="num">MXN</td><td>SPEI con CLABE, depósito en OXXO, Mercado Pago</td><td>Se busca tanto "rifa" como "sorteo"</td></tr>
+        <tr><td>Argentina</td><td class="num">ARS</td><td>Alias o CBU, Mercado Pago, USDT</td><td>Competencia directa con comisión (Rifalo)</td></tr>
+        <tr><td>Colombia</td><td class="num">COP</td><td>Nequi, Daviplata, Bancolombia</td><td>Es común jugar con el resultado de una lotería oficial</td></tr>
+        <tr><td>Perú</td><td class="num">PEN</td><td>Yape, Plin, transferencia</td><td>—</td></tr>
+        <tr><td>Venezuela</td><td class="num">USD</td><td>Pago Móvil, Zelle, USDT</td><td>Precios en dólares</td></tr>
+        <tr><td>Otros</td><td class="num">USD</td><td>PayPal, USDT, texto libre</td><td>Plantilla genérica</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two">
+    <div class="card">
+      <span class="tag info" style="justify-self:start">Función nueva</span>
+      <h3>Modo lotería oficial</h3>
+      <p class="muted" style="font-size:14.5px">Junto al sorteo con drand, el organizador puede elegir al crear la rifa que gane el número que coincida con las últimas cifras de un sorteo oficial en una fecha dada. Queda registrado antes del cierre, así que no se puede cambiar después. Es como ya se hacen muchas rifas en Colombia y Venezuela.</p>
+    </div>
+    <div class="card">
+      <span class="tag warn" style="justify-self:start">Costo SEO del .cl</span>
+      <h3>El dominio le dice a Google "Chile"</h3>
+      <p class="muted" style="font-size:14.5px">Google toma los dominios de país como señal de ubicación, y eso no se puede cambiar. Posicionar en México o Colombia desde <code>rifaclara.maudev.cl</code> va a costar más. Como Chile es la prioridad, conviene partir así. Para no cerrar la puerta: rutas que no dependan del dominio, guías por país (<code>/guias/como-hacer-una-rifa-en-mexico</code>) y, si otro país despega, migrar a un .com con redirecciones 301.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MOCKUPS ============ -->
+<section id="mockups">
+  <div class="sec-head">
+    <span class="label">Mockups · datos de ejemplo</span>
+    <h2>Seis pantallas del MVP</h2>
+    <p class="muted" style="max-width:68ch">La grilla, el panel y el verificador funcionan: toca números, confirma pagos y corre la verificación. El verificador calcula SHA-256 de verdad sobre datos de ejemplo.</p>
+  </div>
+
+  <div class="screens">
+    <!-- A: rifa pública -->
+    <figure class="screen">
+      <div class="phone app"><div class="phone-in">
+        <div class="bar"><span>20:14</span><span>rifaclara.maudev.cl/r/bici-aro-29</span></div>
+        <div class="appbar"><span class="brand"><i>N°</i>Rifa Clara</span><button class="btn ghost sm" type="button">Compartir</button></div>
+        <div class="scroll">
+          <div class="prize">
+            <div class="prize-img"><span>Foto del premio</span></div>
+            <div class="prize-body">
+              <h4>Bicicleta aro 29</h4>
+              <div class="small">Organiza <b style="color:var(--ink)">Club Deportivo Los Aromos</b> · 3 rifas anteriores entregadas</div>
+              <div class="row"><span class="price">$2.000 <span class="small" style="font-family:var(--body);font-weight:400">el número</span></span><span class="small">Cierra en <b style="color:var(--ink)">5 d 22 h</b></span></div>
+              <div class="prog" aria-hidden="true"><b id="progBar" style="width:63%"></b></div>
+              <div class="row small"><span id="progTxt">63 de 100 vendidos</span><span>Sorteo 20 sep, 20:05</span></div>
+            </div>
+          </div>
+          <div class="trust">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 2.5 3.2v4.1c0 3.4 2.3 6.2 5.5 7.2 3.2-1 5.5-3.8 5.5-7.2V3.2L8 1Z" fill="var(--accent)"/><path d="m5.3 8 1.9 1.9 3.6-3.8" stroke="var(--accent-ink)" stroke-width="1.6" fill="none"/></svg>
+            <span><b>Sorteo verificable.</b> El ganador sale de la ronda 32380712 de drand, que aún no existe.</span>
+          </div>
+          <div class="legend">
+            <span><i style="border:1px solid var(--line);background:var(--surface)"></i>Libre</span>
+            <span><i style="background:var(--ticket)"></i>Tu elección</span>
+            <span><i style="background:var(--held-soft);border:1px solid var(--held)"></i>Reservado</span>
+            <span><i style="background:var(--taken)"></i>Vendido</span>
+          </div>
+          <div class="grid" id="grid" role="group" aria-label="Números de la rifa"></div>
+        </div>
+        <div class="sheet">
+          <div class="sum"><span class="small" id="selTxt">2 números elegidos</span><b id="selTotal">$4.000</b></div>
+          <button class="btn ticket" type="button">Reservar números</button>
+        </div>
+      </div></div>
+      <figcaption><b>Página pública de la rifa</b>Se renderiza en el servidor (SEO e imagen OG por rifa). La grilla es una isla React.</figcaption>
+    </figure>
+
+    <!-- B: reserva + boleto -->
+    <figure class="screen">
+      <div class="phone app"><div class="phone-in">
+        <div class="bar"><span>20:16</span><span>rifaclara.maudev.cl/boleto/RC-7K2M</span></div>
+        <div class="appbar"><span class="brand"><i>N°</i>Tu boleto</span><span class="pill held">Pendiente de pago</span></div>
+        <div class="scroll">
+          <div class="field"><span class="fl">Nombre</span><div class="in" id="fName">Camila Muñoz</div></div>
+          <div class="field"><span class="fl">WhatsApp</span><div class="in" id="fWa">+56 9 8765 4321</div></div>
+          <div class="turn"><span class="ok">✓</span>Verificación anti-bots completada</div>
+          <div class="receipt">
+            <div class="receipt-top">
+              <div class="row"><span class="label">Código de boleto</span><span class="small">Vence en 23 h 58 min</span></div>
+              <span class="code">RC-7K2M</span>
+              <div class="chips"><span class="chip">07</span><span class="chip">47</span></div>
+              <div class="kv"><span>Rifa</span><b>Bicicleta aro 29</b></div>
+              <div class="kv"><span>Total a transferir</span><b>$4.000</b></div>
+            </div>
+            <div class="receipt-cut" aria-hidden="true"></div>
+            <div class="receipt-bot">
+              <span class="label">Datos de transferencia</span>
+              <div class="kv"><span>Titular</span><b>Club Dep. Los Aromos</b></div>
+              <div class="kv"><span>Banco</span><b>BancoEstado · Cuenta RUT</b></div>
+              <div class="kv"><span>RUT</span><b>65.123.456-7</b></div>
+              <div class="kv"><span>Asunto</span><b class="mono">RC-7K2M</b></div>
+            </div>
+          </div>
+          <button class="btn" type="button">Enviar comprobante por WhatsApp</button>
+          <p class="small">Guarda este enlace. Con el código puedes comprobar que tus números entraron al sorteo.</p>
+        </div>
+      </div></div>
+      <figcaption><b>Reserva y boleto</b>Sin cuenta: nombre, WhatsApp y Turnstile. El mensaje de WhatsApp sale prearmado con el código.</figcaption>
+    </figure>
+
+    <!-- C: crear rifa -->
+    <figure class="screen">
+      <div class="phone app"><div class="phone-in">
+        <div class="bar"><span>18:02</span><span>rifaclara.maudev.cl/panel/nueva</span></div>
+        <div class="appbar"><span class="brand"><i>N°</i>Nueva rifa</span><span class="small">Paso 2 de 4</span></div>
+        <div class="scroll">
+          <div class="steps" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <h3 style="font:800 26px/1 var(--display);text-transform:uppercase">Números y precio</h3>
+          <div class="field"><span class="label" style="letter-spacing:.06em">Cantidad de números</span>
+            <div class="seg"><span>50</span><span>100</span><span class="on">200</span><span>500</span></div>
+          </div>
+          <div class="field"><span class="fl">País y moneda</span><div class="in" id="fCur">Chile · CLP (peso chileno)</div></div>
+          <div class="field"><span class="fl">Precio por número</span><div class="in" id="fPrice">$2.000</div></div>
+          <div class="field"><span class="fl">Reserva sin pagar se libera en</span><div class="in" id="fHold">24 horas</div></div>
+          <div class="field"><span class="fl">Máximo por persona</span><div class="in" id="fMax">10 números</div></div>
+          <div class="calc">
+            <div class="kv"><span>Si vendes todo</span><b>$400.000</b></div>
+            <div class="kv"><span>Comisión de Rifa Clara</span><b>$0</b></div>
+          </div>
+          <p class="small">Gratis hasta 100 números. Con 200 números esta rifa pasa a Rifa Plus: $4.990, pago único, sin comisión sobre lo que vendas.</p>
+        </div>
+        <div class="sheet"><button class="btn ghost" type="button">Atrás</button><button class="btn" type="button">Siguiente: fecha y pago</button></div>
+      </div></div>
+      <figcaption><b>Asistente para crear rifa</b>Cuatro pasos: premio, números y precio, fecha y datos de pago, revisión.</figcaption>
+    </figure>
+
+    <!-- E: sorteo y verificación -->
+    <figure class="screen">
+      <div class="phone app"><div class="phone-in">
+        <div class="bar"><span>20:06</span><span>rifaclara.maudev.cl/r/bici-aro-29/sorteo</span></div>
+        <div class="appbar"><span class="brand"><i>N°</i>Resultado</span><span class="pill paid">Sorteada</span></div>
+        <div class="scroll">
+          <div class="winner">
+            <span class="label" style="color:var(--ticket-ink);opacity:.75">Número ganador</span>
+            <span class="big" id="winNum">··</span>
+            <span id="winName" style="font-weight:600">Calculando…</span>
+          </div>
+          <div class="field"><span class="label">Ronda drand quicknet</span><div class="hash">32380712 · 20 sep 2026 20:05:00 CLT</div></div>
+          <div class="field"><span class="label">Azar público (ejemplo)</span><div class="hash" id="vRand"></div></div>
+          <div class="field"><span class="label">Huella de la lista (100 boletos)</span><div class="hash" id="vSnap">…</div></div>
+          <button class="btn" type="button" id="verifyBtn">Verificar en mi navegador</button>
+          <div class="vlog" id="vlog" aria-live="polite">Pulsa verificar para recalcular el resultado.</div>
+        </div>
+      </div></div>
+      <figcaption><b>Sorteo y verificación</b>El botón recalcula con SHA-256 real sobre la lista de ejemplo. En producción también valida la firma BLS de drand.</figcaption>
+    </figure>
+  </div>
+
+  <!-- D: panel -->
+  <figure class="screen" style="justify-items:stretch">
+    <div class="desk app">
+      <div class="desk-bar"><i></i><i></i><i></i><span class="url">rifaclara.maudev.cl/panel/rifas/bici-aro-29</span></div>
+      <div class="desk-scroll"><div class="desk-in">
+        <nav class="side" aria-label="Panel">
+          <span class="brand" style="padding:4px 10px 12px"><i>N°</i>Rifa Clara</span>
+          <a href="#mockups" class="on">Reservas y pagos</a>
+          <a href="#mockups">Grilla</a>
+          <a href="#mockups">Compartir</a>
+          <a href="#mockups">Editar rifa</a>
+          <a href="#mockups">Registro de cambios</a>
+        </nav>
+        <div class="dmain">
+          <div class="row"><div><span class="label">Bicicleta aro 29 · cierra 20 sep</span><h3 style="font:800 28px/1 var(--display);text-transform:uppercase;margin-top:4px">Reservas y pagos</h3></div><button class="btn ghost" type="button">Exportar CSV</button></div>
+          <div class="kpis">
+            <div class="kpi"><span>Pagados</span><b id="kPaid">63</b></div>
+            <div class="kpi"><span>Por confirmar</span><b id="kHeld">4</b></div>
+            <div class="kpi"><span>Libres</span><b>33</b></div>
+            <div class="kpi"><span>Recaudado</span><b id="kMoney">$126.000</b></div>
+          </div>
+          <div class="dtable"><table>
+            <thead><tr><th>Boleto</th><th>Participante</th><th>Números</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="resBody"></tbody>
+          </table></div>
+          <p class="small">Cada cambio queda en el registro con fecha y huella encadenada: el organizador no puede borrar un pago sin que se note.</p>
+        </div>
+      </div></div>
+    </div>
+    <figcaption style="max-width:none"><b>Panel del organizador</b>Confirma pagos con un clic y contacta por WhatsApp. Prueba el botón "Marcar pagado".</figcaption>
+  </figure>
+
+  <!-- F: herramienta SEO -->
+  <figure class="screen" style="justify-items:stretch">
+    <div class="desk app">
+      <div class="desk-bar"><i></i><i></i><i></i><span class="url">rifaclara.maudev.cl/herramientas/sorteo-de-nombres</span></div>
+      <div class="desk-scroll"><div class="tool">
+        <div style="display:grid;gap:14px;align-content:start">
+          <span class="crumbs">Inicio › Herramientas › Sorteo de nombres</span>
+          <h4>Sorteo de nombres online</h4>
+          <p class="muted" style="font-size:14px;max-width:60ch">Pega una lista, uno por línea, y elige al ganador con un sorteo verificable. Gratis y sin registrarte.</p>
+          <div class="adslot" style="height:90px">Anuncio · AdSense 728×90<br>fuera de los controles</div>
+          <div class="ta">Camila Muñoz<br>Diego Rojas<br>Fernanda Soto<br>Ignacio Pérez<br>Valentina Díaz<br>…</div>
+          <div class="row" style="justify-content:flex-start;gap:10px"><button class="btn" type="button">Sortear 1 ganador</button><button class="btn ghost" type="button">Crear una rifa con números</button></div>
+          <div style="font-size:13.5px;display:grid;gap:6px;max-width:64ch"><b style="font-size:15px">Cómo hacer un sorteo justo</b><span class="muted">Guía de 800 palabras bajo la herramienta: cuándo usar sorteo por nombres o por números, cómo publicar el resultado, preguntas frecuentes.</span></div>
+        </div>
+        <div style="display:grid;gap:14px;align-content:start">
+          <div class="adslot" style="height:250px">Anuncio<br>AdSense 300×250</div>
+          <div class="card" style="padding:12px;gap:6px"><span class="label">Más herramientas</span><span style="font-size:13px">Ruleta de nombres<br>Generador de números<br>Talonario de rifa PDF<br>Sorteo de comentarios</span></div>
+        </div>
+      </div></div>
+    </div>
+    <figcaption style="max-width:none"><b>Herramienta gratuita, con anuncios</b>Estas páginas atraen tráfico orgánico y cargan la publicidad. Los anuncios nunca van pegados a botones.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ ARQUITECTURA ============ -->
+<section id="arquitectura">
+  <div class="sec-head">
+    <span class="label">Frontend y backend separados</span>
+    <h2>Dos repos: rifas-web y rifas-api</h2>
+    <p class="muted" style="max-width:68ch">Cada uno vive en su carpeta, con su repositorio, su CI y su despliegue: <code>C:\Users\lucas\rifas-web</code> y <code>C:\Users\lucas\rifas-api</code>, junto a maudev. Hacia afuera es un solo sitio: rifas-web es la única puerta pública y le pasa todo lo que llega a <code>/api/*</code> a rifas-api por un service binding. Al compartir dominio, las cookies de sesión funcionan sin CORS.</p>
+  </div>
+
+  <div class="arch" role="img" aria-label="El navegador entra por rifaclara.maudev.cl a rifas-web, que reenvía /api a rifas-api por service binding; rifas-api usa D1, R2, cron y drand">
+    <div class="node"><span class="label">Visitante</span><b>Navegador</b><ul><li>Páginas HTML</li><li>Islas React</li><li>Verificador del sorteo</li></ul></div>
+    <div class="link"><span class="ar">→</span><span>HTTPS<br>rifaclara.maudev.cl</span></div>
+    <div class="node web"><span class="label">Repo 1 · público</span><b>rifas-web</b><ul><li>Astro en un Worker</li><li>Páginas, herramientas, guías</li><li>SSR que lee datos de la API</li><li>Reenvía <code>/api/*</code></li></ul></div>
+    <div class="link"><span class="ar">→</span><span>service binding<br>sin salir a internet</span></div>
+    <div class="node api"><span class="label">Repo 2 · sin ruta pública</span><b>rifas-api</b><ul><li>Hono en un Worker</li><li>Rifas, reservas, sorteos, sesiones</li><li>Cron: vencer reservas, sortear</li><li>Emite <code>openapi.json</code></li></ul></div>
+    <div class="link"><span class="ar">→</span><span>bindings</span></div>
+    <div class="node"><span class="label">Servicios</span><b>Datos</b><ul><li>D1 (SQLite)</li><li>R2 (imágenes)</li><li>drand (azar público)</li><li>Resend (correo)</li></ul></div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h3>rifas-web</h3>
+<pre class="tree">rifas-web/
+├─ src/
+│  ├─ pages/          <span class="c">portada, herramientas/, guias/, r/[slug], panel/</span>
+│  ├─ content/guias/  <span class="c">guías en MDX</span>
+│  ├─ components/     <span class="c">islas React: Grilla, Ruleta, Verificador</span>
+│  ├─ lib/api/        <span class="c">cliente tipado generado desde openapi.json</span>
+│  └─ lib/sorteo.ts   <span class="c">verificador del sorteo</span>
+├─ tests/             <span class="c">Playwright + vectores del sorteo</span>
+├─ astro.config.mjs
+└─ wrangler.jsonc     <span class="c">dominio + binding API → rifas-api</span></pre>
+    </div>
+    <div class="card">
+      <h3>rifas-api</h3>
+<pre class="tree">rifas-api/
+├─ src/
+│  ├─ index.ts        <span class="c">app Hono, todo bajo /api</span>
+│  ├─ routes/         <span class="c">sorteos, rifas, reservas, auth</span>
+│  ├─ db/schema.ts    <span class="c">Drizzle</span>
+│  ├─ sorteo/         <span class="c">algoritmo + cliente drand</span>
+│  └─ cron.ts         <span class="c">tareas programadas</span>
+├─ migrations/        <span class="c">migraciones D1</span>
+├─ spec/              <span class="c">openapi.json, vectores-sorteo.json</span>
+├─ test/              <span class="c">Vitest dentro del runtime de Workers</span>
+└─ wrangler.jsonc     <span class="c">D1, R2, cron; workers.dev apagado</span></pre>
+    </div>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Lo que cuesta separar</th><th>Cómo se resuelve</th></tr></thead>
+      <tbody>
+        <tr><td>Que el frontend sepa qué responde la API</td><td>rifas-api genera <code>openapi.json</code> desde sus esquemas Zod; rifas-web genera su cliente tipado con <code>openapi-typescript</code>. Si la API cambia y el cliente no, la compilación del frontend falla.</td></tr>
+        <tr><td>Que el sorteo y el verificador calculen lo mismo</td><td>El algoritmo se ejecuta en rifas-api y se recalcula en rifas-web. <code>spec/vectores-sorteo.json</code> vive en rifas-api; rifas-web lo copia y los dos repos corren los mismos casos en CI.</td></tr>
+        <tr><td>Desplegar sin romper</td><td>Primero rifas-api, siempre con cambios compatibles hacia atrás; después rifas-web. Cada repo tiene su workflow de GitHub Actions.</td></tr>
+        <tr><td>Probar antes de producción</td><td>Entorno de preview en cada repo; el preview de rifas-web apunta al preview de rifas-api.</td></tr>
+        <tr><td>Desarrollar en local</td><td><code>wrangler dev</code> en dos terminales; wrangler conecta el service binding entre las dos sesiones.</td></tr>
+        <tr><td>Secretos</td><td>Cada repo guarda los suyos. rifas-api: Turnstile, Resend, sesiones. rifas-web: solo claves públicas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ STACK ============ -->
+<section id="stack">
+  <div class="sec-head">
+    <span class="label">Todo en Cloudflare, plan gratuito</span>
+    <h2>Stack y lo que cuesta operarlo</h2>
+  </div>
+  <div class="two">
+    <div class="card">
+      <h3>Tecnologías</h3>
+      <ul class="clean">
+        <li><span>Frontend</span><span>rifas-web: Astro con adaptador de Cloudflare. HTML en el servidor para SEO; islas React para grilla, panel y verificador</span></li>
+        <li><span>Backend</span><span>rifas-api: Hono en su propio Worker, API REST bajo <code>/api</code></span></li>
+        <li><span>Estilos</span><span>Tailwind v4 (mismo sistema que maudev.cl)</span></li>
+        <li><span>Base de datos</span><span>Cloudflare D1 (SQLite) con Drizzle ORM y migraciones</span></li>
+        <li><span>Autenticación</span><span>Better Auth: enlace mágico por correo y Google. Sin contraseñas (el hash no cabe en 10 ms de CPU)</span></li>
+        <li><span>Correo</span><span>Resend, plan gratuito</span></li>
+        <li><span>Imágenes</span><span>R2, subida directa y redimensionada en el navegador</span></li>
+        <li><span>Tiempo real</span><span>Durable Objects con WebSocket (fase 3); en el MVP, sondeo cada 15 s</span></li>
+        <li><span>Tareas</span><span>Cron Triggers: liberar reservas vencidas y ejecutar sorteos</span></li>
+        <li><span>Anti-abuso</span><span>Turnstile + límite de peticiones por IP y por teléfono</span></li>
+        <li><span>Validación</span><span>Zod en cada endpoint; de ahí sale el OpenAPI</span></li>
+        <li><span>Pruebas</span><span>Vitest en rifas-api, Playwright en rifas-web, como en maudev</span></li>
+        <li><span>Despliegue</span><span>GitHub Actions → <code>wrangler deploy</code>, un workflow por repo</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Límites del plan gratuito</h3>
+      <div class="tablebox" style="border:0">
+        <table>
+          <thead><tr><th>Servicio</th><th>Gratis</th><th>Nos alcanza para</th></tr></thead>
+          <tbody>
+            <tr><td>Workers</td><td class="num">100 mil pet./día</td><td>Archivos estáticos no cuentan</td></tr>
+            <tr><td>CPU por petición</td><td class="num">10 ms</td><td>Límite duro: sin bcrypt ni imágenes pesadas</td></tr>
+            <tr><td>D1 lecturas</td><td class="num">5 M filas/día</td><td>Cientos de rifas activas</td></tr>
+            <tr><td>D1 escrituras</td><td class="num">100 mil filas/día</td><td>Miles de reservas diarias</td></tr>
+            <tr><td>D1 almacenamiento</td><td class="num">5 GB</td><td>Años de datos</td></tr>
+            <tr><td>R2</td><td class="num">10 GB</td><td>~50 mil fotos de premios</td></tr>
+            <tr><td>Resend</td><td class="num">100 correos/día</td><td>Solo enlaces mágicos</td></tr>
+            <tr><td>Turnstile · Analytics</td><td class="num">Ilimitado</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Cifras según la documentación que conozco; hay que confirmarlas al empezar la fase 2. Si crece, Workers Paid cuesta USD 5/mes y sube la CPU a 30 s.</p>
+      <p class="small">Las llamadas de rifas-web a rifas-api por service binding no deberían contar como una petición extra; confirmarlo en la documentación vigente.</p>
+      <p class="small"><b style="color:var(--ink)">Dominio:</b> <code>rifaclara.maudev.cl</code> como dominio personalizado de rifas-web, en la misma zona de Cloudflare que maudev.cl. rifas-api no tiene ruta pública. Sin costo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATOS Y RUTAS ============ -->
+<section id="datos">
+  <div class="sec-head">
+    <span class="label">Modelo inicial</span>
+    <h2>Datos y rutas</h2>
+  </div>
+  <div class="two">
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Tabla</th><th>Campos clave</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">users</td><td>id, email, nombre, plan, verificado</td></tr>
+          <tr><td class="mono">raffles</td><td>id, slug, organizador, título, país, moneda, zona_horaria, precio (entero en la unidad menor), medios_pago JSON, modo_sorteo (drand · lotería), plan, total_números, estado (borrador · abierta · cerrada · sorteada · cancelada), visibilidad, cierre, ronda_drand, huella, ots</td></tr>
+          <tr><td class="mono">prizes</td><td>rifa, posición, título, imagen</td></tr>
+          <tr><td class="mono">tickets</td><td>PK (rifa, número), estado, reserva, pagado_en. La clave impide vender dos veces un número</td></tr>
+          <tr><td class="mono">reservations</td><td>código, rifa, nombre, teléfono, vence_en, estado</td></tr>
+          <tr><td class="mono">draws</td><td>rifa, ronda, azar, firma, resultados JSON</td></tr>
+          <tr><td class="mono">events</td><td>rifa, tipo, datos, hash_anterior, hash. Registro encadenado, solo se agrega</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Ruta</th><th>Qué es</th><th>Indexa</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">/</td><td>Portada: crear rifa gratis</td><td>Sí</td></tr>
+          <tr><td class="mono">/rifas</td><td>Rifas públicas activas</td><td>Sí</td></tr>
+          <tr><td class="mono">/r/:slug</td><td>Página de la rifa</td><td>Si es pública</td></tr>
+          <tr><td class="mono">/r/:slug/sorteo</td><td>Resultado y verificador</td><td>Sí</td></tr>
+          <tr><td class="mono">/boleto/:código</td><td>Boleto del participante</td><td>No</td></tr>
+          <tr><td class="mono">/herramientas/*</td><td>Sorteo, ruleta, números, talonario PDF</td><td>Sí</td></tr>
+          <tr><td class="mono">/guias/*</td><td>Contenido editorial (MDX)</td><td>Sí</td></tr>
+          <tr><td class="mono">/panel/*</td><td>Organizador</td><td>No</td></tr>
+          <tr><td class="mono">/verificar</td><td>Verificador independiente, código abierto</td><td>Sí</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SEO ============ -->
+<section id="seo">
+  <div class="sec-head">
+    <span class="label">Tráfico e ingresos</span>
+    <h2>SEO primero, AdSense después</h2>
+    <p class="muted" style="max-width:68ch">El SEO tarda meses en rendir, así que las herramientas y guías salen antes que el sistema de rifas. Las palabras clave hay que validarlas con AnswerThePublic, como hiciste para maudev; estas son las semillas.</p>
+  </div>
+  <div class="decisions">
+    <div class="dec"><span class="tag info">Herramientas</span><h3>Uso inmediato, mucho volumen</h3><p>sorteo de nombres · ruleta de nombres · generador de números aleatorios · talonario de rifa para imprimir · sorteo de comentarios (pegando la lista)</p></div>
+    <div class="dec"><span class="tag info">Guías</span><h3>Dudas antes de organizar</h3><p>cómo hacer una rifa · ideas de premios para rifas · cuánto cobrar por número · rifa de 100 números · rifa solidaria · ¿es legal hacer una rifa en Chile? En la fase 1, todas escritas para Chile</p></div>
+    <div class="dec"><span class="tag go">Transaccional</span><h3>Convertir en organizadores</h3><p>rifa online · crear rifa gratis · rifa por WhatsApp · plantilla de rifa. Cada herramienta termina en "crear una rifa con números".</p></div>
+  </div>
+  <div class="two">
+    <div class="card">
+      <h3>SEO técnico</h3>
+      <ul class="dots">
+        <li>HTML completo desde el servidor y Core Web Vitals en verde (Astro envía 0 KB de JS salvo en las islas)</li>
+        <li>Sitemap dinámico con las rifas públicas; <code>noindex</code> en boletos, panel y rifas no listadas</li>
+        <li>Imagen OG por rifa (premio, precio, % vendido) cacheada en R2: es lo que se ve al compartir por WhatsApp</li>
+        <li>Datos estructurados: <code>WebApplication</code> en herramientas, <code>Article</code> y <code>FAQPage</code> en guías</li>
+        <li>Pie "Hecho por Maudev" enlazado a maudev.cl, y el caso publicado en <code>/casos</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Monetización</h3>
+      <ul class="dots">
+        <li><b>AdSense</b> en herramientas, guías y el explorador de rifas. Solicitarlo con unas 15 guías, las herramientas y las páginas legales publicadas</li>
+        <li>En la página de la rifa, como máximo un bloque bajo la grilla, nunca junto a "Reservar"</li>
+        <li>Banner de consentimiento de cookies antes de cargar anuncios (Ley 21.719)</li>
+        <li><b>Pago fijo por rifa</b> (Plus y Pro) y plan para organizaciones, detallados en <a href="#cobro">Cuánto cobrar</a>. Cobro con Flow (CLP) o Lemon Squeezy (USD), como en tu <code>docs/pagos-flow-lemon.md</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SEGURIDAD ============ -->
+<section id="seguridad">
+  <div class="sec-head">
+    <span class="label">Seguridad y datos personales</span>
+    <h2>Lo que puede salir mal y cómo se evita</h2>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Riesgo</th><th>Control</th></tr></thead>
+      <tbody>
+        <tr><td>Dos personas compran el mismo número</td><td>Clave primaria (rifa, número) y reserva en una sola transacción de D1; el segundo recibe "número tomado"</td></tr>
+        <tr><td>Bots acaparan números</td><td>Turnstile, máximo de números por teléfono, vencimiento de reservas, límite de peticiones</td></tr>
+        <tr><td>El organizador altera la lista después del cierre</td><td>Lista congelada, huella publicada, sello OpenTimestamps y registro de eventos encadenado</td></tr>
+        <tr><td>Alguien conoce el azar antes</td><td>La ronda de drand se fija al cerrar y es futura; la firma es verificable con la clave pública de drand</td></tr>
+        <tr><td>Estafa: premio que no se entrega</td><td>Perfil con historial, verificación de identidad opcional, denuncias y suspensión</td></tr>
+        <tr><td>Filtración de teléfonos</td><td>Solo el organizador ve el teléfono; en público, nombre enmascarado ("Camila M."). Borrado 90 días después del sorteo</td></tr>
+        <tr><td>Robo de sesión</td><td>Cookies <code>HttpOnly</code> y <code>SameSite</code>, CSP estricta (ya la validas en maudev), CSRF en formularios</td></tr>
+        <tr><td>Alguien llama a la API saltándose el sitio</td><td>rifas-api no tiene ruta pública ni subdominio workers.dev: solo se entra por el service binding de rifas-web, que aplica Turnstile y límites</td></tr>
+        <tr><td>Imágenes maliciosas</td><td>Solo JPG, PNG o WebP, peso máximo, redimensionado en el navegador y dominio aparte de R2</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ FASES ============ -->
+<section id="fases">
+  <div class="sec-head">
+    <span class="label">Plan de trabajo · estimado a medio tiempo</span>
+    <h2>Fases</h2>
+  </div>
+  <div class="road">
+    <div class="phase first">
+      <span class="when">Semana 1</span>
+      <h3>Fase 0 · Validar</h3>
+      <ul><li>Nombre del producto</li><li>Repos rifas-web (Astro) y rifas-api (Hono, D1) con CI y entorno de preview</li><li><code>rifaclara.maudev.cl</code> apuntando a rifas-web, que ya reenvía <code>/api/salud</code> a rifas-api</li><li>Consulta legal breve sobre rifas en Chile</li><li>Keywords con AnswerThePublic, solo Google Chile</li></ul>
+      <p class="done"><b>Listo cuando:</b> los dos repos despliegan solos, el subdominio responde y hay 30 keywords chilenas priorizadas.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Semanas 2–3 · solo Chile</span>
+      <h3>Fase 1 · Herramientas y contenido</h3>
+      <ul><li><b>rifas-web:</b> portada, 4 herramientas (sorteo de nombres, ruleta, números, talonario PDF), 6 guías chilenas, legales con Ley 21.719, sitemap, <code>es-CL</code> y precios en CLP</li><li><b>rifas-api:</b> sorteos de nombres compartibles (guarda la huella de la lista y la ronda de drand, luego el resultado), cron que los resuelve, esquema base de D1 ya con país y moneda, <code>openapi.json</code></li><li>Search Console y Cloudflare Web Analytics</li></ul>
+      <p class="done"><b>Listo cuando:</b> las páginas están indexadas en Google Chile y un sorteo de nombres se comparte y se verifica con un enlace.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Semanas 4–7</span>
+      <h3>Fase 2 · MVP de rifas</h3>
+      <ul><li>Cuentas, asistente de creación, página pública, grilla, reservas, boleto</li><li>Medios de pago chilenos: transferencia, cuenta RUT, link de Mercado Pago</li><li>Panel de pagos, vencimiento automático, cierre, sorteo con drand y verificador</li><li>Pruebas de concurrencia sobre la reserva de números</li></ul>
+      <p class="done"><b>Listo cuando:</b> una rifa real de 100 números se crea, se vende y se sortea de principio a fin.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Semanas 8–9</span>
+      <h3>Fase 3 · Confianza y difusión</h3>
+      <ul><li>Imágenes OG, grilla en tiempo real, OpenTimestamps, registro público de cambios</li><li>Perfil del organizador con historial y denuncias</li></ul>
+      <p class="done"><b>Listo cuando:</b> un tercero puede auditar una rifa sin preguntarnos nada.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Semana 10 en adelante</span>
+      <h3>Fase 4 · Ingresos</h3>
+      <ul><li>Solicitud de AdSense, consentimiento de cookies, ubicación de anuncios</li><li>Rifa Plus, Rifa Pro y plan Organizaciones con Flow y Lemon Squeezy</li><li>Caso publicado en maudev.cl</li></ul>
+      <p class="done"><b>Listo cuando:</b> AdSense aprobado y la primera Rifa Plus pagada.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Cuando Chile tenga tráfico estable</span>
+      <h3>Fase 5 · Otros países</h3>
+      <ul><li>México, Colombia y Argentina: moneda, medios de pago (incluido USDT) y guías por país</li><li>Modo lotería oficial para rifas que se juegan con un sorteo oficial</li><li>Evaluar migrar a un dominio .com si otro país despega</li></ul>
+      <p class="done"><b>Listo cuando:</b> una rifa en otra moneda se crea y se sortea sin cambios en la base de datos.</p>
+    </div>
+    <div class="phase">
+      <span class="when">Cuando haya tracción · opcional</span>
+      <h3>Fase 6 · Pagos integrados</h3>
+      <ul><li>4 % sobre venta exitosa con Mercado Pago Marketplace, activado rifa por rifa</li><li>Solo en países donde Mercado Pago lo permita y con asesoría legal previa</li></ul>
+      <p class="done"><b>Listo cuando:</b> una rifa cobra sus boletos dentro de la plataforma y la comisión llega sola.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREGUNTAS ============ -->
+<section id="preguntas">
+  <div class="sec-head">
+    <span class="label">Tu turno</span>
+    <h2>Por decidir antes de la fase 1</h2>
+  </div>
+  <div class="qs">
+    <div class="q"><b>¿Vamos con el modelo de cobro en dos etapas?</b><span>Gratis hasta 100 números, pago fijo por rifa desde $4.990, y el 4 % solo si más adelante integramos pagos.</span></div>
+    <div class="q"><b>¿Cripto queda solo como medio de pago del organizador?</b><span>USDT en su billetera más el sello en Bitcoin. El contrato que cobra y paga queda fuera hasta tener tracción y asesoría legal.</span></div>
+    <div class="q"><b>¿"Rifa Clara" como nombre del producto?</b><span>Vive en <code>rifaclara.maudev.cl</code>, pero la marca es lo que aparece en las imágenes que se comparten por WhatsApp.</span></div>
+    <div class="q"><b>¿Creo los repos en GitHub?</b><span>Propongo los dos privados en tu cuenta. Más adelante conviene publicar el verificador del sorteo como código abierto: suma confianza.</span></div>
+  </div>
+</section>
+
+<footer>
+  <span>Rifa Clara · nombre provisorio · plan v0.3</span>
+  <span>Preparado para Maudev · los mockups usan datos de ejemplo</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  // ---------- grilla interactiva ----------
+  const PRICE = 2000;
+  const fmt = n => "$" + n.toLocaleString("es-CL");
+  let seed = 29;
+  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const state = [];
+  for (let i = 0; i < 100; i++) state.push("free");
+  // 63 vendidos, 4 reservados, de forma determinista
+  const order = [...Array(100).keys()].sort(() => rnd() - 0.5);
+  const keep = new Set([7, 47]);
+  let paid = 0, held = 0;
+  for (const i of order) {
+    if (keep.has(i)) continue;
+    if (paid < 63) { state[i] = "paid"; paid++; }
+    else if (held < 4) { state[i] = "held"; held++; }
+  }
+  const selected = new Set([7, 47]);
+  const grid = document.getElementById("grid");
+  const selTxt = document.getElementById("selTxt");
+  const selTotal = document.getElementById("selTotal");
+  function renderSel(){
+    const n = selected.size;
+    selTxt.textContent = n === 1 ? "1 número elegido" : n + " números elegidos";
+    selTotal.textContent = fmt(n * PRICE);
+  }
+  state.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.id = "n" + i;
+    b.className = "cell" + (s !== "free" ? " " + s : "") + (selected.has(i) ? " sel" : "");
+    b.textContent = String(i).padStart(2, "0");
+    const lbl = s === "paid" ? "vendido" : s === "held" ? "reservado" : "libre";
+    b.setAttribute("aria-label", "Número " + b.textContent + ", " + lbl);
+    if (s !== "free") b.disabled = true;
+    else b.setAttribute("aria-pressed", selected.has(i));
+    b.addEventListener("click", () => {
+      if (selected.has(i)) selected.delete(i); else selected.add(i);
+      b.classList.toggle("sel", selected.has(i));
+      b.setAttribute("aria-pressed", selected.has(i));
+      renderSel();
+    });
+    grid.appendChild(b);
+  });
+  renderSel();
+
+  // ---------- panel del organizador ----------
+  const rows = [
+    { code: "RC-7K2M", name: "Camila Muñoz", nums: ["07","47"], st: "held", t: "vence en 23 h" },
+    { code: "RC-P3QX", name: "Diego Rojas", nums: ["12","13","14"], st: "held", t: "vence en 9 h" },
+    { code: "RC-H8ZD", name: "Fernanda Soto", nums: ["88"], st: "held", t: "vence en 2 h" },
+    { code: "RC-4WNB", name: "Ignacio Pérez", nums: ["31","66"], st: "exp", t: "venció" },
+    { code: "RC-M2LT", name: "Valentina Díaz", nums: ["03","30","90"], st: "paid", t: "" }
+  ];
+  let kPaid = 63, kHeld = 4;
+  const body = document.getElementById("resBody");
+  function renderRows(){
+    body.innerHTML = "";
+    rows.forEach((r, idx) => {
+      const tr = document.createElement("tr");
+      const pill = r.st === "paid" ? '<span class="pill paid">Pagado</span>'
+        : r.st === "exp" ? '<span class="pill exp">Reserva vencida</span>'
+        : '<span class="pill held">Por confirmar · ' + r.t + '</span>';
+      const action = r.st === "held"
+        ? '<button class="btn sm" type="button" data-i="' + idx + '">Marcar pagado</button> <button class="btn ghost sm" type="button">WhatsApp</button>'
+        : r.st === "exp" ? '<button class="btn ghost sm" type="button">Liberar números</button>' : '<span class="small">Confirmado</span>';
+      tr.innerHTML = '<td class="mono">' + r.code + '</td><td>' + r.name + '</td><td class="mono">' + r.nums.join(" · ") +
+        '</td><td class="num">' + fmt(r.nums.length * PRICE) + '</td><td>' + pill + '</td><td style="white-space:nowrap">' + action + '</td>';
+      body.appendChild(tr);
+    });
+  }
+  body.addEventListener("click", e => {
+    const i = e.target.getAttribute && e.target.getAttribute("data-i");
+    if (i === null || i === undefined) return;
+    const r = rows[+i];
+    r.st = "paid";
+    kPaid += r.nums.length; kHeld = Math.max(0, kHeld - 1);
+    document.getElementById("kPaid").textContent = kPaid;
+    document.getElementById("kHeld").textContent = kHeld;
+    document.getElementById("kMoney").textContent = fmt(kPaid * PRICE);
+    const pct = Math.min(100, kPaid);
+    document.getElementById("progBar").style.width = pct + "%";
+    document.getElementById("progTxt").textContent = kPaid + " de 100 vendidos";
+    renderRows();
+  });
+  renderRows();
+
+  // ---------- sorteo verificable (SHA-256 real, datos de ejemplo) ----------
+  const AZAR = "8f2c1a9e47b35d06c2e1f98a7b4d3c52e6a90f1b8d7c4e3a2b1f0e9d8c7b6a51";
+  const RIFA = "bici-aro-29";
+  const names = ["Camila M.","Diego R.","Fernanda S.","Ignacio P.","Valentina D.","Tomás A.","Josefa L.","Benjamín C.","Martina V.","Agustín F."];
+  const lista = [];
+  for (let n = 0; n < 100; n++) {
+    lista.push(String(n).padStart(2, "0") + ":" + names[(n * 7 + 3) % names.length]);
+  }
+  document.getElementById("vRand").textContent = AZAR;
+  async function sha256(s){
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  async function sortear(){
+    const huella = await sha256(lista.join("\n"));
+    const h = await sha256(AZAR + ":" + RIFA + ":" + huella + ":0");
+    const i = Number(BigInt("0x" + h) % BigInt(lista.length));
+    return { huella, h, i, linea: lista[i] };
+  }
+  const canHash = !!(window.crypto && crypto.subtle && typeof BigInt === "function");
+  if (canHash) {
+    sortear().then(r => {
+      document.getElementById("vSnap").textContent = r.huella;
+      const [num, nombre] = r.linea.split(":");
+      document.getElementById("winNum").textContent = num;
+      document.getElementById("winName").textContent = nombre + " · boleto de ejemplo";
+    });
+  } else {
+    document.getElementById("winName").textContent = "Este navegador no permite calcular SHA-256 aquí";
+  }
+  const vlog = document.getElementById("vlog");
+  document.getElementById("verifyBtn").addEventListener("click", async () => {
+    if (!canHash) { vlog.textContent = "Tu navegador no expone crypto.subtle en esta página."; return; }
+    vlog.textContent = "1 · Calculando huella de 100 líneas…";
+    const r = await sortear();
+    const shown = document.getElementById("winNum").textContent;
+    const ok = r.linea.startsWith(shown + ":");
+    vlog.innerHTML =
+      "1 · huella = " + r.huella.slice(0, 16) + "…\n" +
+      "2 · sha256(azar:rifa:huella:0) = " + r.h.slice(0, 16) + "…\n" +
+      "3 · " + "0x" + r.h.slice(0, 8) + "… mod 100 = " + r.i + "\n" +
+      (ok ? '<span class="okt">✓ Coincide: el ganador es el número ' + shown + "</span>" : "✗ No coincide con el resultado publicado");
+  });
+})();
+</script>

@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/*
+ * Dirección C · Familia Maudev: marfil, petróleo y salvia, con Sora + Inter
+ * como maudev.cl. JetBrains Mono para números, huellas y rondas.
+ * Los componentes usan solo estos tokens; el tema oscuro cambia los valores.
+ */
+:root {
+  --bg: #faf8f3;
+  --surface: #ffffff;
+  --salvia: #e6eee9;
+  --ink: #13302c;
+  --muted: #57645f;
+  --line: #d8e0db;
+  --accent: #1d6359;
+  --accent-ink: #ffffff;
+  --ok: #23845a;
+  --ok-soft: #e1f0e7;
+  --pick: #e9b949;
+  --pick-ink: #2a1f00;
+  --sold: #e6eee9;
+  --sold-ink: #8fa39b;
+  --danger: #b3261e;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121c1b;
+    --surface: #192423;
+    --salvia: #1f2c2a;
+    --ink: #f7f4ef;
+    --muted: #a8b8b1;
+    --line: #384746;
+    --accent: #94d1bd;
+    --accent-ink: #0f2a26;
+    --ok: #3fca87;
+    --ok-soft: #173a2c;
+    --pick: #e9b949;
+    --pick-ink: #2a1f00;
+    --sold: #22302e;
+    --sold-ink: #6b7f79;
+    --danger: #f2877f;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-salvia: var(--salvia);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-pick: var(--pick);
+  --color-pick-ink: var(--pick-ink);
+  --color-sold: var(--sold);
+  --color-sold-ink: var(--sold-ink);
+  --color-danger: var(--danger);
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display text-balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,72 @@
+name: CI y despliegue
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.cambios.outputs.api }}
+      web: ${{ steps.cambios.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: cambios
+        with:
+          filters: |
+            api: ['api/**', 'shared/**', 'package-lock.json']
+            web: ['web/**', 'shared/**', 'package-lock.json']
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  # La API va primero: la web nueva puede depender de un endpoint nuevo.
+  desplegar-api:
+    needs: verificar
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.verificar.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx wrangler deploy
+        working-directory: api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  desplegar-web:
+    needs: [verificar, desplegar-api]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+      && needs.verificar.result == 'success' && needs.verificar.outputs.web == 'true'
+      && needs.desplegar-api.result != 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx wrangler deploy
+        working-directory: web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

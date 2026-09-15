@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rifa Clara · direcciones de diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#E9ECF1;font-family:system-ui,sans-serif}
+.dir{
+  --r:14px;
+  background:var(--bg);color:var(--ink);font-family:var(--body);
+  padding:22px 40px 26px;display:grid;gap:26px;width:1200px;margin:0 auto 24px;
+}
+/* ---------- A · Cristal ---------- */
+.a{
+  --bg:#F5F7FA;--surface:#FFFFFF;--ink:#0B1220;--muted:#5B6475;--line:#E1E6EE;
+  --accent:#2446F0;--accent-ink:#FFFFFF;--ok:#0EA66B;--ok-soft:#DDF5EA;
+  --pick:#FFCF3F;--pick-ink:#1D1600;--sold:#E8ECF2;--sold-ink:#9AA3B2;
+  --display:"Geist",system-ui,sans-serif;--body:"Geist",system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,monospace;
+  --h1w:650;--h1ls:-.035em;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:40px 40px;background-position:-1px -1px;
+}
+.a .hero-l{background:linear-gradient(90deg,var(--bg) 70%,transparent)}
+/* ---------- B · Nocturno ---------- */
+.b{
+  --bg:#0A0D12;--surface:#121821;--ink:#E7ECF3;--muted:#8B96A8;--line:#232C39;
+  --accent:#36C2F5;--accent-ink:#03121A;--ok:#3FD68F;--ok-soft:#10301F;
+  --pick:#FF8A3D;--pick-ink:#1A0B00;--sold:#1A212C;--sold-ink:#4C5667;
+  --display:"Manrope",system-ui,sans-serif;--body:"Manrope",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --h1w:800;--h1ls:-.03em;
+  background:radial-gradient(900px 420px at 80% 30%,rgba(54,194,245,.12),transparent 60%),var(--bg);
+}
+/* ---------- C · Maudev ---------- */
+.c{
+  --bg:#FAF8F3;--surface:#FFFFFF;--ink:#13302C;--muted:#57645F;--line:#D8E0DB;
+  --accent:#1D6359;--accent-ink:#FFFFFF;--ok:#23845A;--ok-soft:#E1F0E7;
+  --pick:#E9B949;--pick-ink:#2A1F00;--sold:#E6EEE9;--sold-ink:#8FA39B;
+  --display:"Sora",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --h1w:600;--h1ls:-.025em;
+}
+
+/* ---------- componentes compartidos ---------- */
+.top{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font:700 19px/1 var(--display);letter-spacing:-.01em}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--accent);position:relative;display:grid;place-items:center}
+.mark::before,.mark::after{content:"";position:absolute;top:50%;width:8px;height:8px;border-radius:50%;background:var(--bg);transform:translateY(-50%)}
+.mark::before{left:-4px}.mark::after{right:-4px}
+.mark svg{width:15px;height:15px}
+.nav{display:flex;gap:26px;font-size:14.5px;color:var(--muted);align-items:center}
+.btn{font:600 14.5px/1 var(--body);border-radius:10px;padding:12px 18px;border:0;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+.hero-l{display:grid;gap:20px;padding-block:18px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;justify-self:start;font:500 12.5px/1 var(--mono);color:var(--ok);background:var(--ok-soft);padding:7px 11px;border-radius:99px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+h1{margin:0;font:var(--h1w) 58px/1.02 var(--display);letter-spacing:var(--h1ls);text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{margin:0;font-size:18px;line-height:1.55;color:var(--muted);max-width:50ch}
+.ctas{display:flex;gap:10px}
+.facts{display:flex;gap:22px;font-size:13.5px;color:var(--muted)}
+.facts b{display:block;font:600 20px/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05),0 18px 40px rgba(10,20,40,.10)}
+.b .card{box-shadow:0 0 0 1px rgba(54,194,245,.08),0 24px 60px rgba(0,0,0,.5)}
+.card-top{padding:16px 18px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.org{font-size:12.5px;color:var(--muted)}
+.title{font:700 21px/1.15 var(--display);letter-spacing:-.01em}
+.price{font:600 20px/1 var(--mono)}
+.price small{font:400 12px var(--body);color:var(--muted)}
+.bar{height:6px;border-radius:9px;background:var(--sold);overflow:hidden}
+.bar b{display:block;height:100%;width:63%;background:var(--ok);border-radius:9px}
+.small{font-size:12.5px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;padding:14px 18px}
+.n{aspect-ratio:1.15;border-radius:7px;display:grid;place-items:center;font:500 12.5px/1 var(--mono);border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.n.s{background:var(--sold);border-color:transparent;color:var(--sold-ink)}
+.n.p{background:var(--pick);border-color:var(--pick);color:var(--pick-ink);font-weight:600}
+.n.r{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.proof{margin:0 18px 16px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);display:grid;gap:4px}
+.proof .k{font:500 11px/1.3 var(--mono);color:var(--muted);word-break:break-all}
+.proof .t{font-size:12.5px;font-weight:600;display:flex;gap:6px;align-items:center;color:var(--ok)}
+.foot{display:grid;grid-template-columns:auto 1fr auto;gap:26px;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
+.name{display:grid;gap:4px}
+.name b{font:700 22px/1 var(--display)}
+.name span{font-size:13px;color:var(--muted);max-width:44ch}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw div{display:grid;gap:4px;font:400 10.5px/1.2 var(--mono);color:var(--muted)}
+.sw i{width:58px;height:34px;border-radius:8px;border:1px solid var(--line)}
+.type{display:grid;gap:4px;text-align:right;font-size:12.5px;color:var(--muted)}
+.type b{font:600 15px/1.2 var(--display);color:var(--ink)}
+.type code{font-family:var(--mono);color:var(--ink)}
+</style>
+</head>
+<body>
+<main id="root"></main>
+<script>
+const dirs = [
+  { cls: "a", name: "A · Cristal", desc: "Claro y preciso, como una app financiera. La cuadrícula de fondo y los números en mono dicen 'esto se puede comprobar'.",
+    sw: [["#F5F7FA","fondo"],["#0B1220","texto"],["#2446F0","acción"],["#0EA66B","verificado"],["#FFCF3F","tu número"]],
+    type: ["Geist", "Geist Mono"] },
+  { cls: "b", name: "B · Nocturno", desc: "Oscuro y tecnológico, sin repetir el amarillo o morado de la competencia. Luce en pantallas y en transmisiones en vivo.",
+    sw: [["#0A0D12","fondo"],["#E7ECF3","texto"],["#36C2F5","acción"],["#3FD68F","verificado"],["#FF8A3D","tu número"]],
+    type: ["Manrope", "JetBrains Mono"] },
+  { cls: "c", name: "C · Familia Maudev", desc: "Marfil, petróleo y salvia, las mismas fuentes de maudev.cl. Se nota que es un producto de Maudev y hereda su confianza.",
+    sw: [["#FAF8F3","fondo"],["#13302C","texto"],["#1D6359","acción"],["#23845A","verificado"],["#E9B949","tu número"]],
+    type: ["Sora", "Inter"] },
+];
+const sold = new Set([1,2,4,5,8,9,10,12,13,15,16,18,19,21,22,24,26,27,29,30,31,33,34,36,37,39,40,42,43,45,46,48,49]);
+const res = new Set([6,25,38]), pick = new Set([7,47]);
+const grid = Array.from({ length: 50 }, (_, i) => {
+  const c = pick.has(i) ? "p" : sold.has(i) ? "s" : res.has(i) ? "r" : "";
+  return `<span class="n ${c}">${String(i).padStart(2, "0")}</span>`;
+}).join("");
+const check = `<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.4 6.6 11.4 12.5 4.8" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+document.getElementById("root").innerHTML = dirs.map(d => `
+<section class="dir ${d.cls}" id="dir-${d.cls}">
+  <div class="top">
+    <span class="logo"><span class="mark">${check}</span>Rifa Clara</span>
+    <nav class="nav"><span>Ruleta</span><span>Herramientas</span><span>Guías</span><span>Precios</span><button class="btn">Crear rifa gratis</button></nav>
+  </div>
+  <div class="hero">
+    <div class="hero-l">
+      <span class="eyebrow"><i></i>Sorteo verificable · ronda drand pública</span>
+      <h1>Rifas online que <em>cualquiera puede comprobar.</em></h1>
+      <p class="sub">Crea tu rifa, comparte el enlace y controla quién pagó. Al cierre, el ganador sale de un número aleatorio público y cada participante puede verificarlo.</p>
+      <div class="ctas"><button class="btn">Crear rifa gratis</button><button class="btn ghost">Ver rifa de ejemplo</button></div>
+      <div class="facts"><span><b>$0</b>comisión</span><span><b>100</b>números gratis</span><span><b>1 clic</b>para verificar</span></div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="row"><span class="org">Bomberos 3ª Compañía · Valparaíso</span><span class="small">Cierra en 5 d 22 h</span></div>
+        <div class="row"><span class="title">Rifa a beneficio: TV 55" + canasta familiar</span><span class="price">$2.000 <small>c/u</small></span></div>
+        <div class="bar"><b></b></div>
+        <div class="row small"><span>63 de 100 vendidos</span><span>Tus números: 07 · 47</span></div>
+      </div>
+      <div class="grid">${grid}</div>
+      <div class="proof">
+        <span class="t">✓ Lista sellada · sorteo 20 sep, 20:05</span>
+        <span class="k">huella 9f3c…e71a · ronda 32380712 · quicknet</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="name"><b>${d.name}</b><span>${d.desc}</span></div>
+    <div class="sw">${d.sw.map(([h, l]) => `<div><i style="background:${h}"></i>${h}<br>${l}</div>`).join("")}</div>
+    <div class="type"><b>${d.type[0]}</b><code>${d.type[1]}</code><span>títulos · números</span></div>
+  </div>
+</section>`).join("");
+</script>
+</body>
+</html>
