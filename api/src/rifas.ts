@@ -109,6 +109,20 @@ rifas.get("/:id/reservas", requiereUsuario, async (c) => {
   });
 });
 
+/**
+ * Rifas que Google puede indexar: públicas y visibles (abiertas, cerradas o
+ * sorteadas en los últimos 60 días). Alimenta /sitemap-rifas.xml.
+ */
+rifas.get("/indexables", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT slug, actualizado_en AS actualizadoEn FROM rifas
+     WHERE visibilidad = 'publica' AND estado IN ('abierta', 'cerrada', 'sorteada')
+       AND (estado = 'abierta' OR actualizado_en > ?)
+     ORDER BY actualizado_en DESC LIMIT 5000`,
+  ).bind(ahora() - 60 * 86400).all<{ slug: string; actualizadoEn: number }>();
+  return c.json({ rifas: results }, 200, { "cache-control": "public, max-age=3600" });
+});
+
 /** Vista pública: sin datos del organizador ni de los participantes. */
 rifas.get("/publica/:slug", async (c) => {
   const buscar = () => c.env.DB.prepare("SELECT * FROM rifas WHERE slug = ? AND estado NOT IN ('cancelada', 'pago_pendiente')")

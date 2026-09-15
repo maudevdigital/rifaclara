@@ -17,10 +17,13 @@ export default defineConfig({
   // peticiones con sesión, y los pagos se confirman consultando a Flow.
   security: { checkOrigin: false },
   vite: { plugins: [tailwindcss()] },
-  // Fuera del sitemap: la portada provisoria, el ingreso y el panel (todas noindex).
+  // Fuera del sitemap: el ingreso y el panel (noindex). Las rifas públicas van en
+  // /sitemap-rifas.xml, que se genera en cada visita y se agrega al índice.
   integrations: [
     sitemap({
-      filter: (pagina) => pagina !== "https://rifaclara.maudev.cl/" && !/^\/(ingresar|panel)(\/|$)/.test(new URL(pagina).pathname),
+      filter: (pagina) => !/\/(ingresar|panel)(\/|$)/.test(new URL(pagina).pathname),
+      customSitemaps: ["https://rifaclara.maudev.cl/sitemap-rifas.xml"],
     }),
   ],
+
 });

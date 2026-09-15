@@ -6,16 +6,26 @@ interface Props {
   title: string;
   description: string;
   noindex?: boolean;
+  /** Imagen para compartir (ruta absoluta del sitio). */
+  imagen?: string;
+  tipo?: "website" | "article";
 }
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, imagen = "/og.png", tipo = "website" } = Astro.props;
 // Con build.format "file" la ruta llega como /ruleta.html al prerenderizar.
 const ruta = Astro.url.pathname.replace(/\.html$/, "").replace(/\/index$/, "/");
 const canonical = new URL(ruta, Astro.site);
+const imagenAbsoluta = new URL(imagen, Astro.site);
 const enlaces = [
   { href: "/ruleta", texto: "Ruleta" },
   { href: "/sorteo-de-rifa", texto: "Sorteo de rifa" },
   { href: "/plantilla-de-rifa", texto: "Plantilla" },
   { href: "/guias", texto: "Guías" },
+  { href: "/precios", texto: "Precios" },
+];
+const pie = [
+  { titulo: "Rifas", links: [["Crear rifa gratis", "/panel/nueva"], ["Precios", "/precios"], ["Mis rifas", "/panel"]] },
+  { titulo: "Herramientas", links: [["Sorteo de rifa", "/sorteo-de-rifa"], ["Ruleta online", "/ruleta"], ["Plantilla de rifa", "/plantilla-de-rifa"]] },
+  { titulo: "Guías", links: [["Cómo hacer una rifa", "/guias/como-hacer-una-rifa"], ["Cómo sortear una rifa", "/guias/como-sortear-una-rifa"], ["Rifa de 100 números", "/guias/rifa-de-100-numeros"]] },
 ];
 ---
 <html lang="es-CL">
@@ -26,10 +36,19 @@ const enlaces = [
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#1d6359" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:site_name" content="Rifa Clara" />
+    <meta property="og:type" content={tipo} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta property="og:image" content={imagenAbsoluta} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="es_CL" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" />
@@ -38,7 +57,8 @@ const enlaces = [
   <body class="min-h-dvh">
     <header class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-5">
       <Logo />
-      <nav class="flex w-full items-center gap-5 overflow-x-auto text-sm text-muted sm:w-auto" aria-label="Principal">
+      <a href="/panel/nueva" class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink hover:brightness-110 sm:order-last">Crear rifa</a>
+      <nav class="flex w-full items-center gap-5 overflow-x-auto text-sm text-muted sm:ml-auto sm:w-auto" aria-label="Principal">
         {enlaces.map(({ href, texto }) => (
           <a class="whitespace-nowrap hover:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink" href={href} aria-current={ruta === href || ruta.startsWith(href + "/") ? "page" : undefined}>{texto}</a>
         ))}
@@ -47,9 +67,21 @@ const enlaces = [
     <main class="mx-auto max-w-6xl px-5">
       <slot />
     </main>
-    <footer class="mx-auto mt-24 flex max-w-6xl flex-wrap justify-between gap-4 border-t border-line px-5 py-8 text-sm text-muted">
-      <span>Rifa Clara · rifas con sorteo verificable</span>
-      <span class="flex gap-5"><a class="hover:text-ink" href="/precios">Precios</a><a class="hover:text-ink" href="/privacidad">Privacidad</a><a class="hover:text-ink" href="https://maudev.cl">Hecho por Maudev</a></span>
+    <footer class="mx-auto mt-24 grid max-w-6xl gap-8 border-t border-line px-5 py-10 text-sm text-muted sm:grid-cols-[1.2fr_repeat(3,1fr)]">
+      <div class="grid content-start gap-2">
+        <Logo />
+        <p class="max-w-[34ch]">Rifas online con sorteo verificable. Hecho en Chile.</p>
+      </div>
+      {pie.map(({ titulo, links }) => (
+        <nav class="grid content-start gap-2" aria-label={titulo}>
+          <span class="font-semibold text-ink">{titulo}</span>
+          {links.map(([texto, href]) => <a class="hover:text-ink" href={href}>{texto}</a>)}
+        </nav>
+      ))}
+      <div class="flex flex-wrap justify-between gap-4 border-t border-line pt-6 sm:col-span-4">
+        <span>© {new Date().getFullYear()} Rifa Clara</span>
+        <span class="flex gap-5"><a class="hover:text-ink" href="/privacidad">Privacidad</a><a class="hover:text-ink" href="https://maudev.cl">Hecho por Maudev</a></span>
+      </div>
     </footer>
   </body>
 </html>

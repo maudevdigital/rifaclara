@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import Plantilla from "../components/Plantilla.astro";
-import ListaEspera from "../components/ListaEspera.astro";
+import CrearRifa from "../components/CrearRifa.astro";
 
 const url = new URL("/plantilla-de-rifa", Astro.site).href;
 const preguntas = [
@@ -91,5 +91,5 @@ const jsonLd = [
     </section>
   </div>
 
-  <div class="mt-16"><ListaEspera origen="plantilla" titulo="¿Prefieres vender sin papel?" /></div>
+  <div class="mt-16"><CrearRifa titulo="¿Prefieres vender sin papel?" texto="Con Rifa Clara cada persona elige su número en una grilla, reserva sin crear cuenta y recibe su boleto. Tú confirmas los pagos y el sorteo se hace solo al cierre." /></div>
 </Base>

@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import SorteoRifa from "../components/SorteoRifa.astro";
+import CrearRifa from "../components/CrearRifa.astro";
 
 const url = new URL("/sorteo-de-rifa", Astro.site).href;
 const preguntas = [
@@ -45,7 +46,7 @@ const jsonLd = [
 ---
 <Base
   title="Sorteo de rifa online gratis y verificable | Rifa Clara"
-  description="Sortea los números ganadores de tu rifa: del 1 al 100 o solo los vendidos, con varios premios. Gratis, en vivo y con un enlace para que cualquiera compruebe el resultado."
+  description="Sortea los números ganadores de tu rifa, del 1 al 100 o solo los vendidos, con varios premios. Gratis, en vivo y con un enlace que cualquiera puede comprobar."
 >
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
@@ -91,10 +92,6 @@ const jsonLd = [
       </div>
     </section>
 
-    <section class="grid gap-3 rounded-2xl bg-accent p-6 text-accent-ink sm:p-8">
-      <h2 class="text-2xl font-semibold">¿Todavía estás vendiendo números?</h2>
-      <p class="max-w-[56ch] opacity-90">Muy pronto podrás llevar toda tu rifa en Rifa Clara: grilla de números, reservas, control de pagos y este mismo sorteo al cierre. Gratis hasta 100 números.</p>
-      <span class="flex flex-wrap gap-2"><a href="/#lista" class="rounded-lg bg-surface px-4 py-2.5 text-sm font-semibold text-accent">Anótate en la lista de espera</a><a href="/guias/como-hacer-una-rifa" class="rounded-lg border border-accent-ink/40 px-4 py-2.5 text-sm font-semibold">Guía para hacer una rifa</a></span>
-    </section>
+    <CrearRifa titulo="¿Todavía estás vendiendo números?" texto="Lleva toda tu rifa en Rifa Clara: grilla de números, reservas sin cuenta, control de pagos y este mismo sorteo verificable al cierre. Gratis hasta 100 números." />
   </div>
 </Base>

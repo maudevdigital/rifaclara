@@ -36,7 +36,7 @@ const clases = {
 <Base
   title={`${titulo} | Rifa Clara`}
   description={r ? `${r.premios[0]}. ${numeros.length} números a ${pesos(r.precio)}. Sorteo verificable el ${fechaChile(r.cierreEn, r.zonaHoraria)}.` : "Esta rifa no existe."}
-  noindex
+  noindex={!r}
 >
   {!r && (
     <section class="grid gap-4 py-16">
@@ -111,7 +111,7 @@ const clases = {
             <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-sold align-middle"></i>Vendido ({pagados})</span>
           </div>
           {abierta && <p class="text-sm text-muted">Toca los números que quieres. Puedes elegir hasta {r.maxPorPersona}.</p>}
-          <div class="grid grid-cols-10 gap-1 sm:gap-1.5" aria-label="Números de la rifa">
+          <div class:list={["grid grid-cols-10 gap-1 sm:gap-1.5", numeros.length > 200 && "md:grid-cols-20"]} aria-label="Números de la rifa">
             {numeros.map((n) => {
               const e = estados.get(n);
               const base = "grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs";

@@ -1,0 +1,16 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Página no encontrada | Rifa Clara" description="Esta página no existe." noindex>
+  <section class="grid max-w-2xl gap-5 py-16">
+    <span class="font-mono text-sm text-muted">Error 404</span>
+    <h1 class="text-4xl font-semibold tracking-tight">No encontramos esta página</h1>
+    <p class="text-lg text-muted">Puede que el enlace esté incompleto o que la página ya no exista. Si buscabas una rifa, pídele el enlace de nuevo a quien la organiza.</p>
+    <ul class="grid gap-2 sm:grid-cols-2">
+      <li><a class="block rounded-xl border border-line bg-surface p-4 font-semibold hover:border-accent" href="/">Inicio</a></li>
+      <li><a class="block rounded-xl border border-line bg-surface p-4 font-semibold hover:border-accent" href="/panel/nueva">Crear una rifa</a></li>
+      <li><a class="block rounded-xl border border-line bg-surface p-4 font-semibold hover:border-accent" href="/sorteo-de-rifa">Sorteo de rifa</a></li>
+      <li><a class="block rounded-xl border border-line bg-surface p-4 font-semibold hover:border-accent" href="/guias">Guías</a></li>
+    </ul>
+  </section>
+</Base>

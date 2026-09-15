@@ -1,8 +1,11 @@
 ---
+import { getCollection } from "astro:content";
+import { TRAMOS } from "@rifaclara/shared";
 import Base from "../layouts/Base.astro";
-import ListaEspera from "../components/ListaEspera.astro";
+import CrearRifa from "../components/CrearRifa.astro";
+import { pesos } from "../lib/formato";
 
-// Tarjeta de ejemplo: muestra cómo se verá una rifa. Datos inventados.
+// Tarjeta de ejemplo del inicio: muestra cómo se ve una rifa. Datos inventados.
 const vendidos = new Set([1, 2, 4, 5, 8, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 26, 27, 29, 30, 31, 33, 34, 36, 37, 39, 40, 42, 43, 45, 46, 48, 49]);
 const reservados = new Set([6, 25, 38]);
 const elegidos = new Set([7, 47]);
@@ -16,26 +19,92 @@ const clases: Record<string, string> = {
   reservado: "border-dashed border-muted text-muted",
   elegido: "border-pick bg-pick font-semibold text-pick-ink",
 };
+
+const pasos = [
+  { t: "Crea la rifa", d: "Premios, cantidad de números, precio, fecha del sorteo y tus datos para recibir transferencias. Toma dos minutos." },
+  { t: "Comparte el enlace", d: "Mándalo por WhatsApp o Instagram. Cada persona elige sus números en la grilla y los reserva sin crear cuenta." },
+  { t: "Confirma los pagos", d: "Te transfieren directo a ti. Marcas quién pagó desde el panel; las reservas sin pagar se liberan solas." },
+  { t: "Sortea en vivo", d: "A la hora del cierre se sella la lista de números pagados y el ganador sale de un número aleatorio público." },
+];
+
+const ventajas = [
+  { t: "Sorteo que se puede comprobar", d: "El azar sale de drand, un faro público de números aleatorios. La lista queda sellada antes y cualquiera puede repetir el cálculo." },
+  { t: "Reservas sin cuenta y con boleto", d: "Quien compra elige sus números, recibe un boleto con código y los datos para pagarte, y te avisa por WhatsApp." },
+  { t: "Control de pagos sin planillas", d: "Ves quién pagó, quién está pendiente y cuánto llevas. Nadie puede comprar dos veces el mismo número." },
+  { t: "El dinero va directo a ti", d: "Rifa Clara no toca la plata de tu rifa ni cobra comisión por venta. Hasta 100 números es gratis." },
+  { t: "Sorteo en vivo en pantalla completa", d: "Proyéctalo en el evento o transmítelo por Instagram: los números ganadores aparecen uno por uno." },
+  { t: "También en papel", d: "Descarga el talonario en PDF con colilla y QR para vender en persona, y lleva todo en un solo lugar." },
+];
+
+const comparacion = [
+  ["Quién tiene qué número", "Mensajes de WhatsApp y una planilla", "Grilla actualizada que ven todos"],
+  ["Pagos pendientes", "Hay que perseguir a cada uno", "Se liberan solos al vencer el plazo"],
+  ["Números repetidos", "Pasa más de lo que parece", "Imposible: cada número se vende una vez"],
+  ["El sorteo", "Papelitos o una app que nadie puede revisar", "Verificable por cualquier participante"],
+  ["El resultado", "Una foto o un video", "Comprobante público con la lista sellada"],
+];
+
+const preguntas = [
+  { p: "¿Crear una rifa online es gratis?", r: "Sí, hasta 100 números. Las rifas de 101 a 2.000 números tienen un pago único por rifa, sin comisión sobre lo que vendes." },
+  { p: "¿Cómo sé que el sorteo es limpio?", r: "Al cierre, la lista de números pagados queda sellada con una huella SHA-256 y se fija una ronda futura de drand, un número aleatorio público que nadie conoce antes. El ganador sale de un cálculo que cualquiera puede repetir desde el comprobante del sorteo." },
+  { p: "¿Rifa Clara recibe el dinero de los números?", r: "No. Quienes compran te transfieren directo a tu cuenta y tú marcas los pagos en el panel. Rifa Clara solo cobra el pago único de las rifas de más de 100 números." },
+  { p: "¿Quienes compran necesitan crear una cuenta?", r: "No. Eligen sus números, dejan su nombre y WhatsApp y reciben un boleto con un código para pagar y seguir su reserva." },
+  { p: "¿Qué pasa con los números reservados que no se pagan?", r: "Se liberan solos cuando vence el plazo que tú elegiste, y al cierre solo participan en el sorteo los números pagados." },
+  { p: "¿Puedo hacer una rifa en Chile?", r: "La ley reserva la organización de rifas a entidades sin fines de lucro con autorización previa, como bomberos, clubes o fundaciones. Al crear tu rifa declaras que cuentas con los permisos que correspondan. Si tienes dudas sobre tu caso, consulta con un abogado." },
+];
+
+const guias = (await getCollection("guias")).sort((a, b) => a.data.orden - b.data.orden);
+const url = new URL("/", Astro.site).href;
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Rifa Clara",
+    url,
+    inLanguage: "es-CL",
+    publisher: { "@type": "Organization", name: "Maudev", url: "https://maudev.cl" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Rifa Clara",
+    url,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    inLanguage: "es-CL",
+    description: "Plataforma para crear rifas online con grilla de números, reservas, control de pagos y sorteo verificable.",
+    offers: TRAMOS.map((t) => ({ "@type": "Offer", price: String(t.precio), priceCurrency: "CLP", description: `Rifa de hasta ${t.hasta} números` })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: preguntas.map(({ p, r }) => ({ "@type": "Question", name: p, acceptedAnswer: { "@type": "Answer", text: r } })),
+  },
+];
 ---
 <Base
-  title="Rifa Clara · rifas online con sorteo verificable"
-  description="Crea tu rifa online, controla quién pagó y sortea con un número aleatorio público que cualquiera puede comprobar. Hecho en Chile."
-  noindex
+  title="Rifa online gratis con sorteo verificable | Rifa Clara"
+  description="Crea tu rifa online gratis: grilla de números, reservas por WhatsApp, control de pagos y un sorteo en vivo que cualquiera puede comprobar. Hecho en Chile."
 >
-  <section class="grid items-center gap-12 py-10 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <section class="grid items-center gap-12 py-8 lg:grid-cols-[1.05fr_.95fr] lg:py-14">
     <div class="grid gap-6">
       <span class="inline-flex items-center gap-2 justify-self-start rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
-        <i class="size-1.5 rounded-full bg-ok"></i>Sorteo verificable · ronda drand pública
+        <i class="size-1.5 rounded-full bg-ok"></i>Gratis hasta 100 números · sin comisión
       </span>
       <h1 class="text-4xl leading-[1.04] font-semibold tracking-tight sm:text-6xl">
-        Rifas online que <span class="text-accent">cualquiera puede comprobar.</span>
+        Tu rifa online, con un sorteo que <span class="text-accent">cualquiera puede comprobar.</span>
       </h1>
       <p class="max-w-[52ch] text-lg leading-relaxed text-muted">
-        Crea tu rifa, comparte el enlace y controla quién pagó. Al cierre, el ganador sale de un número
-        aleatorio público y cada participante puede verificarlo desde su celular.
+        Crea la rifa, comparte el enlace y controla quién pagó. Al cierre, el ganador sale de un número aleatorio público y cada participante puede verificarlo desde su celular.
       </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="/panel/nueva" class="rounded-xl bg-accent px-7 py-3.5 font-semibold text-accent-ink hover:brightness-110">Crear rifa gratis</a>
+        <a href="#como-funciona" class="rounded-xl border border-line bg-surface px-7 py-3.5 font-semibold hover:border-accent hover:text-accent">Cómo funciona</a>
+      </div>
       <div class="flex gap-8 text-sm text-muted">
-        <span><b class="block font-mono text-xl font-semibold text-ink">$0</b>comisión</span>
+        <span><b class="block font-mono text-xl font-semibold text-ink">$0</b>comisión por venta</span>
         <span><b class="block font-mono text-xl font-semibold text-ink">100</b>números gratis</span>
         <span><b class="block font-mono text-xl font-semibold text-ink">1 clic</b>para verificar</span>
       </div>
@@ -51,7 +120,7 @@ const clases: Record<string, string> = {
         <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full w-[63%] rounded-full bg-ok"></b></div>
         <div class="flex justify-between text-xs text-muted"><span>63 de 100 vendidos</span><span>Tus números: 07 · 47</span></div>
       </div>
-      <div class="grid grid-cols-10 gap-1 p-4 sm:gap-1.5 sm:p-5" aria-label="Grilla de números de ejemplo">
+      <div class="grid grid-cols-10 gap-1 p-4 sm:gap-1.5 sm:p-5" role="img" aria-label="Ejemplo de grilla de números de una rifa: vendidos, reservados, libres y los elegidos">
         {numeros.map(({ n, estado }) => (
           <span class:list={["grid aspect-[1.15] place-items-center rounded-md border font-mono text-[11px] sm:text-xs", clases[estado]]}>{n}</span>
         ))}
@@ -63,28 +132,96 @@ const clases: Record<string, string> = {
     </figure>
   </section>
 
-  <section class="grid gap-4 border-t border-line py-10 sm:grid-cols-2 lg:grid-cols-4">
-    <h2 class="text-2xl font-semibold sm:col-span-2 lg:col-span-4">Ya puedes usar</h2>
-    <a href="/sorteo-de-rifa" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Sorteo de rifa</b><span class="text-sm text-muted">Números ganadores en vivo, con varios premios y comprobante verificable.</span></a>
-    <a href="/ruleta" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Ruleta online</b><span class="text-sm text-muted">Elige un ganador entre nombres, rápido o verificable.</span></a>
-    <a href="/plantilla-de-rifa" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Plantilla de rifa</b><span class="text-sm text-muted">Talonario en PDF con colilla y QR, listo para imprimir.</span></a>
-    <a href="/guias" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Guías</b><span class="text-sm text-muted">Cómo hacer tu rifa, cuánto cobrar y cómo sortear.</span></a>
+  <section id="como-funciona" class="grid scroll-mt-6 gap-6 border-t border-line py-14">
+    <div class="grid gap-2">
+      <h2 class="text-3xl font-semibold tracking-tight">Cómo hacer una rifa online en cuatro pasos</h2>
+      <p class="max-w-[60ch] text-muted">Sin talonarios perdidos ni planillas de Excel: todo queda en un solo enlace.</p>
+    </div>
+    <ol class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {pasos.map(({ t, d }, i) => (
+        <li class="grid content-start gap-2 rounded-2xl border border-line bg-surface p-5">
+          <span class="font-mono text-sm font-semibold text-accent">Paso {i + 1}</span>
+          <h3 class="text-lg font-semibold">{t}</h3>
+          <p class="text-sm leading-relaxed text-muted">{d}</p>
+        </li>
+      ))}
+    </ol>
   </section>
 
-  <section id="pronto" class="grid gap-4 border-t border-line pt-10 sm:grid-cols-3">
-    <h2 class="text-2xl font-semibold sm:col-span-3">Muy pronto: tu rifa completa</h2>
-    <div class="grid content-start gap-1.5">
-      <h3 class="text-lg font-semibold">Sorteo que se puede comprobar</h3>
-      <p class="text-sm leading-relaxed text-muted">El azar sale de drand, un faro público de números aleatorios. Nadie conoce el resultado antes, ni siquiera nosotros.</p>
-    </div>
-    <div class="grid content-start gap-1.5">
-      <h3 class="text-lg font-semibold">Talonario de papel con QR</h3>
-      <p class="text-sm leading-relaxed text-muted">Vende en papel como siempre; cada número trae un QR para verlo en la rifa online.</p>
-    </div>
-    <div class="grid content-start gap-1.5">
-      <h3 class="text-lg font-semibold">El dinero va directo a ti</h3>
-      <p class="text-sm leading-relaxed text-muted">Sin comisión por venta. Los participantes te transfieren a tu cuenta y tú marcas quién pagó.</p>
+  <section class="grid gap-6 py-6">
+    <h2 class="text-3xl font-semibold tracking-tight">Todo lo que tu rifa necesita</h2>
+    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {ventajas.map(({ t, d }) => (
+        <li class="grid content-start gap-2 rounded-2xl bg-salvia p-5">
+          <h3 class="text-lg font-semibold">{t}</h3>
+          <p class="text-sm leading-relaxed text-muted">{d}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="grid gap-4 py-14">
+    <h2 class="text-3xl font-semibold tracking-tight">Rifa por WhatsApp o rifa en Rifa Clara</h2>
+    <div class="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <table class="w-full min-w-[560px] text-left text-sm">
+        <thead class="bg-salvia text-xs text-muted uppercase"><tr><th class="px-4 py-3"><span class="sr-only">Tema</span></th><th class="px-4 py-3">Por WhatsApp y Excel</th><th class="px-4 py-3">Con Rifa Clara</th></tr></thead>
+        <tbody>
+          {comparacion.map(([tema, antes, ahora]) => (
+            <tr class="border-t border-line"><th scope="row" class="px-4 py-3 font-semibold">{tema}</th><td class="px-4 py-3 text-muted">{antes}</td><td class="px-4 py-3">✓ {ahora}</td></tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   </section>
-  <div class="mt-10"><ListaEspera origen="portada" /></div>
+
+  <section class="grid gap-6 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <h2 class="text-3xl font-semibold tracking-tight">Precios simples, sin comisión</h2>
+      <a href="/precios" class="text-sm font-semibold text-accent underline underline-offset-2">Ver detalle de precios</a>
+    </div>
+    <ul class="grid gap-3 sm:grid-cols-3">
+      {TRAMOS.map((t, i) => (
+        <li class="grid gap-1 rounded-2xl border border-line bg-surface p-5">
+          <span class="text-sm text-muted">{i === 0 ? "Hasta" : `De ${(TRAMOS[i - 1]!.hasta + 1).toLocaleString("es-CL")} a`} {t.hasta.toLocaleString("es-CL")} números</span>
+          <b class="font-mono text-3xl">{t.precio === 0 ? "Gratis" : pesos(t.precio)}</b>
+          <span class="text-xs text-muted">{t.precio === 0 ? "para siempre" : "pago único por rifa"}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="grid gap-6 py-14">
+    <h2 class="text-3xl font-semibold tracking-tight">Herramientas gratis para tu rifa</h2>
+    <ul class="grid gap-4 sm:grid-cols-3">
+      <li><a href="/sorteo-de-rifa" class="grid h-full gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Sorteo de rifa</b><span class="text-sm text-muted">Sortea los números ganadores en vivo, con varios premios y un comprobante verificable.</span></a></li>
+      <li><a href="/ruleta" class="grid h-full gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Ruleta online</b><span class="text-sm text-muted">Elige un ganador entre nombres, rápido o con sorteo verificable.</span></a></li>
+      <li><a href="/plantilla-de-rifa" class="grid h-full gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Plantilla de rifa</b><span class="text-sm text-muted">Talonario en PDF con colilla y código QR, listo para imprimir.</span></a></li>
+    </ul>
+  </section>
+
+  <section class="grid gap-6 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <h2 class="text-3xl font-semibold tracking-tight">Guías para organizar tu rifa</h2>
+      <a href="/guias" class="text-sm font-semibold text-accent underline underline-offset-2">Todas las guías</a>
+    </div>
+    <ul class="grid gap-4 md:grid-cols-3">
+      {guias.map((g) => (
+        <li><a href={`/guias/${g.id}`} class="grid h-full content-start gap-2 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="leading-snug">{g.data.titulo}</b><span class="text-sm text-muted">{g.data.descripcion}</span></a></li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="grid max-w-3xl gap-4 py-14">
+    <h2 class="text-3xl font-semibold tracking-tight">Preguntas frecuentes</h2>
+    <div class="grid gap-2">
+      {preguntas.map(({ p, r }) => (
+        <details class="rounded-xl border border-line bg-surface px-4 py-3">
+          <summary class="cursor-pointer font-semibold marker:text-accent">{p}</summary>
+          <p class="pt-2 leading-relaxed text-muted">{r}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <CrearRifa />
 </Base>

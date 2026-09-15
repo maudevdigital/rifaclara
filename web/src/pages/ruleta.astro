@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import Ruleta from "../components/Ruleta.astro";
+import CrearRifa from "../components/CrearRifa.astro";
 
 const url = new URL("/ruleta", Astro.site).href;
 const preguntas = [
@@ -18,7 +19,7 @@ const preguntas = [
   },
   {
     p: "¿Puedo usarla para sortear una rifa?",
-    r: "Sí, para rifas pequeñas: escribe los números vendidos o los nombres de quienes compraron y usa el modo verificable. Para vender números, controlar pagos y publicar la lista antes del sorteo, pronto podrás crear tu rifa completa en Rifa Clara.",
+    r: "Sí, para rifas pequeñas: escribe los números vendidos o los nombres de quienes compraron y usa el modo verificable. Para vender números, controlar pagos y sortear al cierre, puedes crear tu rifa completa en Rifa Clara, gratis hasta 100 números.",
   },
   {
     p: "¿Qué hago si el nombre está dos veces?",
@@ -99,9 +100,6 @@ const jsonLd = [
       </div>
     </section>
 
-    <section class="grid gap-3 rounded-2xl bg-accent p-6 text-accent-ink sm:p-8">
-      <h2 class="text-2xl font-semibold">¿Organizas una rifa con números?</h2>
-      <p class="max-w-[56ch] opacity-90">Muy pronto podrás crearla en Rifa Clara: grilla de números, control de pagos, boletos para cada participante y el mismo sorteo verificable. Gratis hasta 100 números.</p>
-    </section>
+    <CrearRifa titulo="¿Organizas una rifa con números?" texto="Créala en Rifa Clara: grilla de números, reservas, control de pagos, boleto para cada participante y el mismo sorteo verificable al cierre. Gratis hasta 100 números." />
   </div>
 </Base>

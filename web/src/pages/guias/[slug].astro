@@ -47,7 +47,7 @@ const jsonLd = [
   },
 ];
 ---
-<Base title={`${titulo} | Rifa Clara`} description={descripcion}>
+<Base title={`${titulo} | Rifa Clara`.length <= 65 ? `${titulo} | Rifa Clara` : titulo} description={descripcion} tipo="article">
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
   <article class="grid grid-cols-[minmax(0,1fr)] gap-10 pt-2 lg:grid-cols-[minmax(0,1fr)_260px]">
     <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">

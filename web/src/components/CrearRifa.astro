@@ -1,0 +1,21 @@
+---
+// Llamado a crear una rifa. Reemplazó a la lista de espera en el lanzamiento.
+interface Props {
+  titulo?: string;
+  texto?: string;
+}
+const {
+  titulo = "Crea tu rifa gratis",
+  texto = "Grilla de números, reservas, control de pagos y sorteo verificable al cierre. Gratis hasta 100 números y sin comisión por venta.",
+} = Astro.props;
+---
+<section class="grid gap-4 rounded-2xl bg-accent p-6 text-accent-ink sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+  <div class="grid gap-2">
+    <h2 class="text-2xl font-semibold sm:text-3xl">{titulo}</h2>
+    <p class="max-w-[60ch] opacity-90">{texto}</p>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <a href="/panel/nueva" class="rounded-xl bg-pick px-6 py-3.5 font-semibold text-pick-ink hover:brightness-105">Crear rifa gratis</a>
+    <a href="/precios" class="rounded-xl border border-accent-ink/40 px-6 py-3.5 font-semibold hover:bg-accent-ink/10">Ver precios</a>
+  </div>
+</section>
