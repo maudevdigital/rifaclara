@@ -10,6 +10,7 @@ interface RifaPublica {
   slug: string; titulo: string; descripcion: string | null; premios: string[]; precio: number; moneda: string;
   desde: number; hasta: number; cierreEn: number; zonaHoraria: string; estado: string;
   horasReserva: number; maxPorPersona: number; sorteoId: string | null; foto: string | null; og: string | null;
+  organizador: { alias: string; nombre: string | null; desde: number; publicadas: number; sorteadas: number; canceladas: number } | null;
   tomados: { n: string; e: "p" | "r" }[];
   resultado: {
     sorteoId: string; estado: "pendiente" | "resuelto"; ronda: number; momento: number; huella: string;
@@ -35,6 +36,14 @@ const clases = {
   p: `${base} border-transparent bg-sold text-sold-ink line-through`,
 };
 const etiqueta = (n: string, e?: "p" | "r") => (e ? `${n}, ${e === "p" ? "vendido" : "reservado"}` : undefined);
+const mesAno = (s: number) => new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", month: "long", year: "numeric" }).format(s * 1000);
+const motivos = [
+  ["no_entrega", "No entregaron el premio"],
+  ["estafa", "Parece una estafa"],
+  ["ilegal", "Contenido ilegal u ofensivo"],
+  ["datos", "Publica datos de otra persona"],
+  ["otro", "Otro problema"],
+];
 ---
 <Base
   title={`${titulo} | Rifa Clara`}
@@ -105,6 +114,19 @@ const etiqueta = (n: string, e?: "p" | "r") => (e ? `${n}, ${e === "p" ? "vendid
             <span><b data-libres class="block font-mono text-3xl font-semibold">{numeros.length - pagados - reservados}</b><span class="text-sm text-muted">números libres de {numeros.length}</span></span>
           </div>
           <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.{r.estado === "abierta" && <> <a class="text-accent underline" href={`/r/${r.slug}/sorteo`}>Página del sorteo en vivo</a></>}</p>
+
+          {r.organizador && (
+            <div data-organiza class="grid gap-1 rounded-2xl border border-line bg-surface p-4">
+              <span class="text-xs font-semibold tracking-[.14em] text-muted uppercase">Organiza</span>
+              <b>{r.organizador.nombre || "Organizador sin nombre"}</b>
+              <p class="text-sm text-muted">
+                {r.organizador.publicadas === 1 ? "Primera rifa que publica" : `${r.organizador.publicadas} rifas publicadas`}
+                {r.organizador.sorteadas > 0 && ` · ${r.organizador.sorteadas} sorteada${r.organizador.sorteadas === 1 ? "" : "s"} con comprobante`}
+                {" · "}en Rifa Clara desde {mesAno(r.organizador.desde)}
+              </p>
+              <a href={`/organizador/${r.organizador.alias}`} class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Ver su historial</a>
+            </div>
+          )}
         </div>
 
         <div data-rifa data-slug={r.slug} data-precio={r.precio} data-maximo={r.maxPorPersona} class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
@@ -162,12 +184,34 @@ const etiqueta = (n: string, e?: "p" | "r") => (e ? `${n}, ${e === "p" ? "vendid
           <div data-mis-boletos hidden class="flex flex-wrap items-baseline gap-3 border-t border-line pt-3 text-sm"><span class="text-muted">Tus boletos:</span></div>
         </div>
       </section>
+
+      <details data-denuncia data-slug={r.slug} class="rounded-2xl border border-line bg-surface px-5 py-4">
+        <summary class="cursor-pointer text-sm text-muted marker:text-muted hover:text-ink">¿Algo raro con esta rifa? Repórtala</summary>
+        <form data-form class="mt-4 grid max-w-[52ch] gap-3" novalidate>
+          <p class="text-sm text-muted">Revisamos los reportes a mano. Si hay algo grave, cancelamos la rifa. Rifa Clara no cobra ni recibe el dinero de las rifas: quien organiza cobra directo.</p>
+          <label class="grid gap-1 text-sm font-medium" for="denuncia-motivo">¿Qué pasa?
+            <select id="denuncia-motivo" name="motivo" required class="rounded-lg border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none">
+              {motivos.map(([valor, texto]) => <option value={valor}>{texto}</option>)}
+            </select>
+          </label>
+          <label class="grid gap-1 text-sm font-medium" for="denuncia-detalle">Cuéntanos más <span class="font-normal text-muted">(opcional)</span>
+            <textarea id="denuncia-detalle" name="detalle" rows="3" maxlength="600" class="rounded-lg border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none"></textarea>
+          </label>
+          <label class="grid gap-1 text-sm font-medium" for="denuncia-contacto">Tu correo o WhatsApp <span class="font-normal text-muted">(opcional, por si necesitamos preguntarte)</span>
+            <input id="denuncia-contacto" name="contacto" maxlength="120" class="rounded-lg border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none" />
+          </label>
+          <div class="absolute -left-[9999px]" aria-hidden="true"><label for="denuncia-sitio">Sitio</label><input id="denuncia-sitio" name="sitio" tabindex="-1" autocomplete="off" /></div>
+          <button type="submit" class="justify-self-start rounded-xl border border-line px-5 py-2.5 text-sm font-semibold hover:border-accent disabled:opacity-60">Enviar reporte</button>
+          <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+        </form>
+      </details>
     </div>
   )}
 </Base>
 
 <script>
   import "../../scripts/rifa-publica.ts";
+  import "../../scripts/denuncia.ts";
   const boton = document.querySelector<HTMLButtonElement>("[data-copiar]");
   boton?.addEventListener("click", async () => {
     const texto = document.querySelector("[data-enlace]")?.textContent ?? "";

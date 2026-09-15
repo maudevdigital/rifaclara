@@ -1,0 +1,111 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+import { fechaChile } from "../../lib/formato";
+
+export const prerender = false;
+
+interface Denuncia {
+  id: string; motivo: string; detalle: string | null; contacto: string | null; estado: string; nota: string | null;
+  creadoEn: number; resueltoEn: number | null; slug: string; titulo: string; estadoRifa: string; organizador: string;
+}
+const { estado, datos } = await apiServidor<{ denuncias: Denuncia[]; motivos: Record<string, string> }>(Astro.request, "/api/denuncias");
+if (estado === 401) return Astro.redirect("/ingresar");
+if (!datos) Astro.response.status = estado === 403 ? 403 : 502;
+
+const lista = datos?.denuncias ?? [];
+const motivos = datos?.motivos ?? {};
+const abiertas = lista.filter((d) => d.estado === "abierta");
+const cerradas = lista.filter((d) => d.estado !== "abierta");
+---
+<Base title="Denuncias | Rifa Clara" description="Revisión de rifas reportadas." noindex>
+  <section class="grid gap-8 py-6">
+    <div class="grid gap-1">
+      <h1 class="text-4xl font-semibold tracking-tight">Denuncias</h1>
+      <p class="text-sm text-muted"><a href="/panel" class="underline hover:text-ink">Volver al panel</a></p>
+    </div>
+
+    {!datos && (
+      <p class="rounded-2xl border border-line bg-surface p-8 text-muted">
+        {estado === 403 ? "Esta bandeja es solo para quien administra Rifa Clara." : "No pudimos cargar las denuncias. Intenta de nuevo en unos minutos."}
+      </p>
+    )}
+
+    {datos && lista.length === 0 && (
+      <p class="rounded-2xl border border-dashed border-line p-8 text-muted">No hay ninguna rifa reportada. </p>
+    )}
+
+    {abiertas.length > 0 && (
+      <div class="grid gap-4">
+        <h2 class="text-xl font-semibold">Por revisar ({abiertas.length})</h2>
+        {abiertas.map((d) => (
+          <article data-denuncia={d.id} class="grid gap-3 rounded-2xl border border-line bg-surface p-5">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <b>{motivos[d.motivo] ?? d.motivo}</b>
+              <span class="font-mono text-xs text-muted">{fechaChile(d.creadoEn)}</span>
+            </div>
+            <p class="text-sm">
+              <a href={`/r/${d.slug}`} class="font-semibold text-accent underline underline-offset-2">{d.titulo}</a>
+              <span class="text-muted"> · rifa {d.estadoRifa} · organiza {d.organizador}</span>
+            </p>
+            {d.detalle && <p class="max-w-[70ch] rounded-xl bg-bg p-3 text-sm whitespace-pre-line">{d.detalle}</p>}
+            <p class="text-sm text-muted">Contacto de quien reportó: {d.contacto || "no dejó"}</p>
+            <input data-nota maxlength="300" placeholder="Nota de lo que hiciste (opcional)"
+              class="w-full max-w-lg rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none" />
+            <div class="flex flex-wrap gap-2">
+              <button data-accion="revisada" type="button" class="rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-accent">Revisada, sin cambios</button>
+              <button data-accion="descartada" type="button" class="rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-accent">Descartar</button>
+              {d.estadoRifa !== "cancelada" && (
+                <button data-accion="cancelar_rifa" type="button" class="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-bg hover:brightness-110">Cancelar la rifa</button>
+              )}
+            </div>
+            <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+          </article>
+        ))}
+      </div>
+    )}
+
+    {cerradas.length > 0 && (
+      <div class="grid gap-3">
+        <h2 class="text-xl font-semibold">Ya revisadas</h2>
+        <ul class="grid gap-2">
+          {cerradas.map((d) => (
+            <li class="grid gap-1 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+              <span><b>{motivos[d.motivo] ?? d.motivo}</b> · <a href={`/r/${d.slug}`} class="text-accent underline">{d.titulo}</a> · <span class="text-muted">{d.estado}</span></span>
+              {d.nota && <span class="text-muted">{d.nota}</span>}
+              <span class="font-mono text-xs text-muted">{fechaChile(d.resueltoEn ?? d.creadoEn)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+</Base>
+
+<script>
+  for (const caja of document.querySelectorAll<HTMLElement>("[data-denuncia]")) {
+    const mensaje = caja.querySelector<HTMLElement>("[data-mensaje]")!;
+    const nota = caja.querySelector<HTMLInputElement>("[data-nota]")!;
+    for (const boton of caja.querySelectorAll<HTMLButtonElement>("[data-accion]")) {
+      boton.addEventListener("click", async () => {
+        const accion = boton.dataset.accion!;
+        if (accion === "cancelar_rifa" && !confirm("¿Cancelar esta rifa? Deja de estar visible para todos.")) return;
+        for (const b of caja.querySelectorAll("button")) b.disabled = true;
+        try {
+          const res = await fetch(`/api/denuncias/${caja.dataset.denuncia}`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ accion, nota: nota.value }),
+          });
+          const datos = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(datos.error ?? "No se pudo guardar");
+          location.reload();
+        } catch (err) {
+          mensaje.className = "min-h-5 text-sm text-danger";
+          mensaje.textContent = (err as Error).message;
+          for (const b of caja.querySelectorAll("button")) b.disabled = false;
+        }
+      });
+    }
+  }
+</script>

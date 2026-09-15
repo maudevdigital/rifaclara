@@ -8,6 +8,8 @@ import { reservas, vencerReservas } from "./reservas";
 import { procesarCierres } from "./cierre";
 import { pagos } from "./pagos";
 import { imagenes } from "./imagenes";
+import { organizadores } from "./organizadores";
+import { denuncias } from "./denuncias";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
@@ -25,7 +27,8 @@ app.get("/salud", (c) =>
 
 app.get("/yo", (c) => {
   const usuario = c.get("usuario");
-  return usuario ? c.json({ usuario }) : c.json({ error: "No has ingresado" }, 401);
+  if (!usuario) return c.json({ error: "No has ingresado" }, 401);
+  return c.json({ usuario, admin: !!c.env.ADMIN_CORREO && usuario.email === c.env.ADMIN_CORREO });
 });
 
 app.route("/auth", auth);
@@ -33,6 +36,8 @@ app.route("/rifas", rifas);
 app.route("/reservas", reservas);
 app.route("/pagos", pagos);
 app.route("/imagenes", imagenes);
+app.route("/organizadores", organizadores);
+app.route("/denuncias", denuncias);
 app.route("/sorteos", sorteos);
 app.route("/lista-espera", listaEspera);
 

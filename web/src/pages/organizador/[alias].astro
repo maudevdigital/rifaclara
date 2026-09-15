@@ -1,0 +1,85 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+import { fechaChile } from "../../lib/formato";
+
+export const prerender = false;
+
+interface Datos {
+  organizador: { alias: string; nombre: string | null; desde: number; publicadas: number; sorteadas: number; canceladas: number };
+  rifas: { slug: string; titulo: string; estado: string; cierreEn: number; sorteoId: string | null; creadoEn: number }[];
+}
+const { estado, datos } = await apiServidor<Datos>(Astro.request, `/api/organizadores/${encodeURIComponent(Astro.params.alias ?? "")}`);
+if (!datos) Astro.response.status = estado === 404 ? 404 : 502;
+
+const o = datos?.organizador;
+const nombre = o?.nombre || "Organizador sin nombre";
+const mesAno = (s: number) => new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", month: "long", year: "numeric" }).format(s * 1000);
+const etiquetas: Record<string, [string, string]> = {
+  abierta: ["Abierta", "bg-ok-soft text-ok"],
+  cerrada: ["Cerrada · sorteando", "bg-salvia text-ink"],
+  sorteada: ["Sorteada", "bg-pick text-pick-ink"],
+  cancelada: ["Cancelada", "bg-salvia text-muted"],
+};
+---
+<Base
+  title={`${nombre} | Rifa Clara`}
+  description={o ? `Historial de ${nombre} en Rifa Clara: ${o.publicadas} rifas publicadas y ${o.sorteadas} sorteadas.` : "Este organizador no existe."}
+  noindex
+>
+  {!o && (
+    <section class="grid gap-4 py-16">
+      <h1 class="text-4xl font-semibold">No encontramos a este organizador</h1>
+      <p class="text-muted">Revisa el enlace: puede estar mal copiado.</p>
+    </section>
+  )}
+  {o && datos && (
+    <section class="grid gap-8 py-6">
+      <div class="grid gap-2">
+        <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Historial del organizador</span>
+        <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">{nombre}</h1>
+        <p class="text-muted">En Rifa Clara desde {mesAno(o.desde)}.</p>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div class="grid gap-1 rounded-2xl border border-line bg-surface p-5">
+          <b class="font-mono text-3xl font-semibold">{o.publicadas}</b><span class="text-sm text-muted">rifas publicadas</span>
+        </div>
+        <div class="grid gap-1 rounded-2xl border border-line bg-surface p-5">
+          <b class="font-mono text-3xl font-semibold text-ok">{o.sorteadas}</b><span class="text-sm text-muted">sorteadas con comprobante</span>
+        </div>
+        <div class="grid gap-1 rounded-2xl border border-line bg-surface p-5">
+          <b class="font-mono text-3xl font-semibold">{o.canceladas}</b><span class="text-sm text-muted">canceladas</span>
+        </div>
+      </div>
+
+      <p class="max-w-[68ch] text-sm text-muted">
+        Este historial lo arma Rifa Clara sola con lo que pasó en cada rifa: nadie puede editarlo.
+        Cada rifa sorteada tiene un comprobante con el número aleatorio público que se usó, así que puedes
+        revisar por tu cuenta que el resultado no se eligió a dedo.
+      </p>
+
+      {datos.rifas.length === 0 ? (
+        <p class="rounded-2xl border border-dashed border-line p-8 text-muted">Todavía no ha publicado ninguna rifa.</p>
+      ) : (
+        <ul class="grid gap-3">
+          {datos.rifas.map((r) => {
+            const [texto, clase] = etiquetas[r.estado] ?? [r.estado, "bg-salvia"];
+            return (
+              <li class="grid gap-2 rounded-2xl border border-line bg-surface p-5 sm:flex sm:items-center sm:justify-between">
+                <span class="grid gap-1">
+                  <a href={`/r/${r.slug}`} class="font-semibold hover:text-accent">{r.titulo}</a>
+                  <span class="text-sm text-muted">Sorteo del {fechaChile(r.cierreEn)}</span>
+                </span>
+                <span class="flex flex-wrap items-center gap-3">
+                  {r.sorteoId && <a href={`/sorteo/${r.sorteoId}`} class="text-sm font-semibold text-accent underline underline-offset-2">Ver comprobante</a>}
+                  <span class:list={["rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap", clase]}>{texto}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  )}
+</Base>

@@ -7,6 +7,7 @@ import { baseDeSlug, esquemaNuevaRifa } from "./rifas-esquema";
 import { mostrarCodigo, vencerReservas } from "./reservas";
 import { avanzarRifa } from "./cierre";
 import { resolverSorteo } from "./sorteos";
+import { resumenOrganizador } from "./organizadores";
 import { sha256, tramoPara } from "@rifaclara/shared";
 
 interface FilaRifa {
@@ -186,6 +187,7 @@ rifas.get("/publica/:slug", async (c) => {
     sorteoId: r.sorteo_id,
     foto: urlFoto(r.foto),
     og: urlFoto(r.og),
+    organizador: await resumenOrganizador(c.env.DB, r.usuario_id),
     tomados,
     resultado: s && {
       sorteoId: s.id,

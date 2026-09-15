@@ -9,7 +9,7 @@ interface ResumenRifa {
   id: string; slug: string; titulo: string; estado: string; cierreEn: number;
   desde: number; hasta: number; precio: number; pagados: number; reservados: number;
 }
-const yo = await apiServidor<{ usuario: { email: string } }>(Astro.request, "/api/yo");
+const yo = await apiServidor<{ usuario: { email: string; nombre: string | null; alias: string }; admin: boolean }>(Astro.request, "/api/yo");
 if (!yo.datos) return Astro.redirect("/ingresar");
 const { datos } = await apiServidor<{ rifas: ResumenRifa[] }>(Astro.request, "/api/rifas");
 const lista = datos?.rifas ?? [];
@@ -26,10 +26,28 @@ const etiquetas: Record<string, [string, string]> = {
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="grid gap-1">
         <h1 class="text-4xl font-semibold tracking-tight">Mis rifas</h1>
-        <p class="text-sm text-muted">{yo.datos.usuario.email} · <button data-salir type="button" class="underline hover:text-ink">Salir</button></p>
+        <p class="text-sm text-muted">
+          {yo.datos.usuario.email}
+          {yo.datos.admin && <> · <a href="/panel/denuncias" class="underline hover:text-ink">Denuncias</a></>}
+          · <button data-salir type="button" class="underline hover:text-ink">Salir</button>
+        </p>
       </div>
       <a href="/panel/nueva" class="rounded-xl bg-accent px-6 py-3 font-semibold text-accent-ink hover:brightness-110">Crear rifa</a>
     </div>
+
+    <form data-perfil class="grid gap-3 rounded-2xl border border-line bg-surface p-5" novalidate>
+      <div class="grid gap-1">
+        <b>Tu nombre público</b>
+        <p class="max-w-[64ch] text-sm text-muted">Aparece en cada rifa tuya junto a tu historial (cuántas publicaste y cuántas sorteaste). Verlo da confianza a quien compra un número. Puedes poner tu nombre, el del curso o el de la institución.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <input name="nombre" maxlength="60" value={yo.datos.usuario.nombre ?? ""} placeholder="Curso 4°B, Colegio San Jorge"
+          class="w-full max-w-sm rounded-lg border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none" />
+        <button type="submit" class="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink disabled:opacity-60">Guardar</button>
+        <a href={`/organizador/${yo.datos.usuario.alias}`} class="text-sm font-semibold text-accent underline underline-offset-2">Ver mi historial público</a>
+      </div>
+      <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+    </form>
 
     {lista.length === 0 ? (
       <div class="grid justify-items-start gap-3 rounded-2xl border border-dashed border-line p-8">
@@ -64,5 +82,28 @@ const etiquetas: Record<string, [string, string]> = {
   document.querySelector("[data-salir]")?.addEventListener("click", async () => {
     await fetch("/api/auth/salir", { method: "POST" });
     location.href = "/";
+  });
+
+  const perfil = document.querySelector<HTMLFormElement>("[data-perfil]");
+  perfil?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const boton = perfil.querySelector<HTMLButtonElement>("button[type=submit]")!;
+    const mensaje = perfil.querySelector<HTMLElement>("[data-mensaje]")!;
+    boton.disabled = true;
+    try {
+      const res = await fetch("/api/organizadores/yo", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nombre: new FormData(perfil).get("nombre") }),
+      });
+      const datos = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(datos.error ?? "No se pudo guardar");
+      mensaje.className = "min-h-5 text-sm text-ok";
+      mensaje.textContent = datos.nombre ? "Listo: tus rifas ya muestran este nombre." : "Listo: tus rifas quedan sin nombre.";
+    } catch (err) {
+      mensaje.className = "min-h-5 text-sm text-danger";
+      mensaje.textContent = (err as Error).message;
+    }
+    boton.disabled = false;
   });
 </script>

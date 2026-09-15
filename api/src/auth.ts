@@ -3,11 +3,13 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 import { sha256 } from "@rifaclara/shared";
 import { enviarCorreo } from "./correo";
+import { generarId } from "./lista";
 
 export interface Usuario {
   id: string;
   email: string;
   nombre: string | null;
+  alias: string;
 }
 export type Entorno = { Bindings: CloudflareBindings; Variables: { usuario: Usuario | null } };
 
@@ -39,7 +41,7 @@ export const conSesion: MiddlewareHandler<Entorno> = async (c, next) => {
   const id = getCookie(c, COOKIE);
   if (id) {
     const usuario = await c.env.DB.prepare(
-      `SELECT u.id, u.email, u.nombre FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id
+      `SELECT u.id, u.email, u.nombre, u.alias FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id
        WHERE s.id_hash = ? AND s.vence_en > ?`,
     ).bind(await sha256(id), ahora()).first<Usuario>();
     c.set("usuario", usuario ?? null);
@@ -103,10 +105,10 @@ auth.post("/verificar", async (c) => {
   if (!usado) return c.json({ error: "El enlace venció o ya se usó. Pide uno nuevo." }, 400);
 
   const usuario = await c.env.DB.prepare(
-    `INSERT INTO usuarios (id, email, creado_en, ultimo_ingreso) VALUES (?, ?, ?, ?)
+    `INSERT INTO usuarios (id, email, alias, creado_en, ultimo_ingreso) VALUES (?, ?, ?, ?, ?)
      ON CONFLICT (email) DO UPDATE SET ultimo_ingreso = excluded.ultimo_ingreso
      RETURNING id`,
-  ).bind(crypto.randomUUID(), usado.email, ahora(), ahora()).first<{ id: string }>();
+  ).bind(crypto.randomUUID(), usado.email, generarId(8), ahora(), ahora()).first<{ id: string }>();
 
   const sesion = aleatorio();
   await c.env.DB.prepare("INSERT INTO sesiones (id_hash, usuario_id, vence_en, creado_en) VALUES (?, ?, ?, ?)")

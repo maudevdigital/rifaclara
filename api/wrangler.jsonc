@@ -8,7 +8,8 @@
   "preview_urls": false,
   // En local se sobrescriben con .dev.vars. RESEND_API_KEY es un secreto:
   // npx wrangler secret put RESEND_API_KEY
-  // Secretos: RESEND_API_KEY, FLOW_API_KEY, FLOW_SECRET_KEY (wrangler secret put).
+  // Secretos: RESEND_API_KEY, FLOW_API_KEY, FLOW_SECRET_KEY, ADMIN_CORREO.
+  // ADMIN_CORREO recibe las denuncias y es el único que entra a /panel/denuncias.
   "vars": { "SITIO": "https://rifaclara.maudev.cl", "ENTORNO": "produccion", "FLOW_API": "https://www.flow.cl/api" },
   "d1_databases": [
     {

@@ -180,7 +180,9 @@ Cuentas, asistente de creación, página pública, grilla, reservas, boleto, pan
 Listo cuando: una rifa real de 100 números se crea, se vende y se sortea de principio a fin.
 
 **Fase 3 · Confianza y difusión (semanas 8–9)**
-Imágenes OG por rifa, grilla en tiempo real, OpenTimestamps, registro público de cambios, historial del organizador.
+Imágenes OG por rifa ✔, grilla en tiempo real ✔, historial del organizador y denuncias ✔, OpenTimestamps, registro público de cambios.
+
+El historial vive en `/organizador/:alias` (sin indexar) y se arma solo con lo que pasó en cada rifa: publicadas, sorteadas y canceladas. Las denuncias las envía cualquiera desde la rifa, con motivo de una lista cerrada; quedan anotadas en el registro de la rifa solo con el motivo, avisan por correo a `ADMIN_CORREO` y se revisan en `/panel/denuncias`, que puede cancelar la rifa.
 
 **Fase 4 · Ingresos (semana 10 en adelante)**
 AdSense, consentimiento de cookies, pagos únicos con Flow, talonario PDF. Caso publicado en maudev.cl.
