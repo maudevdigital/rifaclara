@@ -40,8 +40,10 @@ app.onError((e, c) => {
 export default {
   fetch: app.fetch,
   async scheduled(evento, env, ctx) {
-    // Cada 10 minutos se vencen reservas sin pagar; una vez al día, limpieza.
-    if (evento.cron === "*/10 * * * *") ctx.waitUntil(vencerReservas(env.DB));
-    else ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));
+    ctx.waitUntil(vencerReservas(env.DB));
+    const hora = new Date(evento.scheduledTime);
+    if (hora.getUTCHours() === 7 && hora.getUTCMinutes() < 10) {
+      ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));
+    }
   },
 } satisfies ExportedHandler<CloudflareBindings>;
