@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "generate-types": "wrangler types",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "local": "wrangler dev --port 8788 --local-upstream 127.0.0.1:8788"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.1",

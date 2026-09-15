@@ -1,0 +1,160 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+
+export const prerender = false;
+
+const yo = await apiServidor(Astro.request, "/api/yo");
+if (!yo.datos) return Astro.redirect("/ingresar");
+
+const campo = "w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink focus:border-accent focus:outline-none";
+const etiqueta = "grid gap-1 text-sm font-medium";
+const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
+---
+<Base title="Crear rifa | Rifa Clara" description="Crea tu rifa online." noindex>
+  <section class="grid max-w-3xl gap-6 py-6">
+    <div class="grid gap-1">
+      <a href="/panel" class="text-sm text-muted hover:text-ink">← Mis rifas</a>
+      <h1 class="text-4xl font-semibold tracking-tight">Crear rifa</h1>
+      <p class="text-muted">Gratis hasta 100 números. Puedes publicar ahora y compartir el enlace al tiro.</p>
+    </div>
+
+    <form data-nueva-rifa class="grid gap-5" novalidate>
+      <fieldset class={bloque}>
+        <legend class="sr-only">Premio</legend>
+        <h2 class="text-lg font-semibold">1. Qué se rifa</h2>
+        <label class={etiqueta} for="rifa-titulo">Nombre de la rifa
+          <input id="rifa-titulo" name="titulo" required maxlength="90" placeholder="Rifa a beneficio del 3º medio B" class={campo} />
+        </label>
+        <div class="grid gap-2">
+          <span class="text-sm font-medium">Premios <span class="font-normal text-muted">(el primero es el premio mayor)</span></span>
+          <div data-premios class="grid gap-2">
+            <input id="rifa-premio-1" name="premio" maxlength="90" placeholder="1er premio: TV 55 pulgadas" class={campo} />
+            <input id="rifa-premio-2" name="premio" maxlength="90" placeholder="2º premio (opcional)" class={campo} />
+          </div>
+          <button data-agregar-premio type="button" class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Agregar otro premio</button>
+        </div>
+        <label class={etiqueta} for="rifa-descripcion">Descripción <span class="font-normal text-muted">(opcional)</span>
+          <textarea id="rifa-descripcion" name="descripcion" rows="3" maxlength="600" placeholder="Para qué es la rifa y cualquier detalle del premio." class={campo}></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset class={bloque}>
+        <legend class="sr-only">Números y precio</legend>
+        <h2 class="text-lg font-semibold">2. Números y precio</h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class={etiqueta} for="rifa-desde">Desde<input id="rifa-desde" name="desde" type="number" inputmode="numeric" min="0" value="1" class={campo} /></label>
+          <label class={etiqueta} for="rifa-hasta">Hasta<input id="rifa-hasta" name="hasta" type="number" inputmode="numeric" min="1" value="100" class={campo} /></label>
+          <label class={etiqueta} for="rifa-precio">Precio por número ($)<input id="rifa-precio" name="precio" type="number" inputmode="numeric" min="100" step="100" value="2000" class={campo} /></label>
+        </div>
+        <p data-calculo class="rounded-lg bg-pick/25 px-3 py-2 text-sm"></p>
+      </fieldset>
+
+      <fieldset class={bloque}>
+        <legend class="sr-only">Cierre y reservas</legend>
+        <h2 class="text-lg font-semibold">3. Cierre y reservas</h2>
+        <label class={etiqueta} for="rifa-cierre">Fecha y hora del sorteo <span class="font-normal text-muted">(hora de tu dispositivo)</span>
+          <input id="rifa-cierre" name="cierre" type="datetime-local" required class={campo} />
+        </label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class={etiqueta} for="rifa-horas">Una reserva sin pagar se libera a las
+            <select id="rifa-horas" name="horasReserva" class={campo}>
+              <option value="12">12 horas</option><option value="24" selected>24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option>
+            </select>
+          </label>
+          <label class={etiqueta} for="rifa-max">Máximo de números por persona
+            <input id="rifa-max" name="maxPorPersona" type="number" inputmode="numeric" min="1" max="50" value="10" class={campo} />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class={bloque}>
+        <legend class="sr-only">Pago</legend>
+        <h2 class="text-lg font-semibold">4. Cómo te pagan</h2>
+        <label class={etiqueta} for="rifa-pago">Datos para pagar <span class="font-normal text-muted">(se muestran en el boleto de quien reserva)</span>
+          <textarea id="rifa-pago" name="mediosPago" rows="3" maxlength="400" placeholder="Transferencia · Cuenta RUT 12.345.678-9 · Banco Estado · a nombre de ..." class={campo}></textarea>
+        </label>
+        <label class={etiqueta} for="rifa-whatsapp">Tu WhatsApp <span class="font-normal text-muted">(para que te manden el comprobante)</span>
+          <input id="rifa-whatsapp" name="whatsapp" type="tel" inputmode="tel" placeholder="+56 9 1234 5678" class={campo} />
+        </label>
+        <p class="text-xs text-muted">El dinero va directo a ti. Rifa Clara no cobra comisión ni recibe pagos de los participantes.</p>
+      </fieldset>
+
+      <label class="flex items-start gap-3 rounded-2xl border border-line bg-surface p-5 text-sm leading-relaxed" for="rifa-declaracion">
+        <input id="rifa-declaracion" name="declaracion" type="checkbox" class="mt-1 size-4 shrink-0 accent-[var(--accent)]" />
+        <span>Declaro que organizo esta rifa con los permisos que correspondan, que el premio no es un inmueble y que me hago responsable de entregarlo a quien gane.</span>
+      </label>
+
+      <div class="grid gap-2">
+        <button type="submit" class="justify-self-start rounded-xl bg-accent px-8 py-3.5 font-semibold text-accent-ink hover:brightness-110 disabled:opacity-60">Publicar rifa</button>
+        <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+      </div>
+    </form>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-nueva-rifa]")!;
+  const mensaje = form.querySelector<HTMLElement>("[data-mensaje]")!;
+  const boton = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
+  const premios = form.querySelector<HTMLElement>("[data-premios]")!;
+  const calculo = form.querySelector<HTMLElement>("[data-calculo]")!;
+  const campo = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+  const clp = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+
+  // Cierre por defecto: en una semana, a las 20:00.
+  const d = new Date(Date.now() + 7 * 86400e3);
+  d.setHours(20, 0, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  campo("cierre").value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T20:00`;
+
+  function recalcular() {
+    const total = Number(campo("hasta").value) - Number(campo("desde").value) + 1;
+    const precio = Number(campo("precio").value);
+    calculo.textContent = total > 0 && precio > 0
+      ? `${total} números × ${clp.format(precio)} = ${clp.format(total * precio)} si vendes todo.`
+      : "Revisa los números y el precio.";
+  }
+  ["desde", "hasta", "precio"].forEach((n) => campo(n).addEventListener("input", recalcular));
+  recalcular();
+
+  form.querySelector("[data-agregar-premio]")!.addEventListener("click", (e) => {
+    const n = premios.children.length + 1;
+    if (n > 5) return;
+    const input = premios.firstElementChild!.cloneNode() as HTMLInputElement;
+    input.id = `rifa-premio-${n}`; input.value = ""; input.placeholder = `${n}º premio (opcional)`;
+    premios.append(input);
+    input.focus();
+    if (n === 5) (e.currentTarget as HTMLElement).hidden = true;
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const cierre = new Date(String(f.get("cierre")));
+    const datos = {
+      titulo: String(f.get("titulo") ?? ""),
+      descripcion: String(f.get("descripcion") ?? ""),
+      premios: f.getAll("premio").map(String).map((p) => p.trim()).filter(Boolean),
+      desde: Number(f.get("desde")), hasta: Number(f.get("hasta")), precio: Number(f.get("precio")),
+      cierreEn: Math.floor(cierre.getTime() / 1000),
+      horasReserva: Number(f.get("horasReserva")), maxPorPersona: Number(f.get("maxPorPersona")),
+      mediosPago: String(f.get("mediosPago") ?? ""), whatsapp: String(f.get("whatsapp") ?? ""),
+      declaracion: f.get("declaracion") === "on",
+    };
+    boton.disabled = true;
+    mensaje.className = "min-h-5 text-sm text-muted";
+    mensaje.textContent = "Publicando…";
+    try {
+      const res = await fetch("/api/rifas", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(datos) });
+      const r = await res.json().catch(() => ({}));
+      if (res.status === 401) { location.href = "/ingresar"; return; }
+      if (!res.ok) throw new Error(r.error ?? "No se pudo publicar");
+      location.href = `/r/${r.slug}?nueva=1`;
+    } catch (err) {
+      mensaje.className = "min-h-5 text-sm text-danger";
+      mensaje.textContent = (err as Error).message;
+      boton.disabled = false;
+    }
+  });
+</script>

@@ -13,6 +13,10 @@ export default defineConfig({
   // depender de un workerd local, que en Windows a veces no levanta.
   adapter: cloudflare({ prerenderEnvironment: "node" }),
   vite: { plugins: [tailwindcss()] },
-  // La portada queda fuera del sitemap mientras sea provisoria (noindex).
-  integrations: [sitemap({ filter: (pagina) => pagina !== "https://rifaclara.maudev.cl/" })],
+  // Fuera del sitemap: la portada provisoria, el ingreso y el panel (todas noindex).
+  integrations: [
+    sitemap({
+      filter: (pagina) => pagina !== "https://rifaclara.maudev.cl/" && !/^\/(ingresar|panel)(\/|$)/.test(new URL(pagina).pathname),
+    }),
+  ],
 });

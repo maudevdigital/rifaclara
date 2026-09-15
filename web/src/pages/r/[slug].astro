@@ -1,0 +1,100 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+import { fechaChile, pesos } from "../../lib/formato";
+import { nombrePremio } from "../../lib/sorteo-remoto";
+
+export const prerender = false;
+
+interface RifaPublica {
+  slug: string; titulo: string; descripcion: string | null; premios: string[]; precio: number; moneda: string;
+  desde: number; hasta: number; cierreEn: number; zonaHoraria: string; estado: string;
+  horasReserva: number; maxPorPersona: number; sorteoId: string | null;
+  tomados: { n: string; e: "p" | "r" }[];
+}
+const { estado, datos: r } = await apiServidor<RifaPublica>(Astro.request, `/api/rifas/publica/${encodeURIComponent(Astro.params.slug ?? "")}`);
+if (!r) Astro.response.status = estado === 404 ? 404 : 502;
+
+const ancho = r ? String(r.hasta).length : 0;
+const estados = new Map(r?.tomados.map((t) => [t.n, t.e]));
+const numeros = r ? Array.from({ length: r.hasta - r.desde + 1 }, (_, i) => String(r.desde + i).padStart(ancho, "0")) : [];
+const pagados = r?.tomados.filter((t) => t.e === "p").length ?? 0;
+const reservados = r?.tomados.filter((t) => t.e === "r").length ?? 0;
+const titulo = r ? (/^rifa\b/i.test(r.titulo) ? r.titulo : `Rifa ${r.titulo}`) : "Rifa no encontrada";
+const nueva = Astro.url.searchParams.has("nueva");
+const clases = {
+  libre: "border-line bg-surface text-ink",
+  r: "border-dashed border-muted text-muted",
+  p: "border-transparent bg-sold text-sold-ink line-through",
+};
+---
+<Base
+  title={`${titulo} | Rifa Clara`}
+  description={r ? `${r.premios[0]}. ${numeros.length} números a ${pesos(r.precio)}. Sorteo verificable el ${fechaChile(r.cierreEn, r.zonaHoraria)}.` : "Esta rifa no existe."}
+  noindex
+>
+  {!r && (
+    <section class="grid gap-4 py-16">
+      <h1 class="text-4xl font-semibold">No encontramos esta rifa</h1>
+      <p class="text-muted">Revisa el enlace o pídeselo de nuevo a quien organiza.</p>
+    </section>
+  )}
+  {r && (
+    <div class="grid gap-8 py-6">
+      {nueva && (
+        <div class="grid gap-2 rounded-2xl bg-ok-soft p-5">
+          <b class="text-ok">✓ Tu rifa está publicada</b>
+          <p class="text-sm">Comparte este enlace por WhatsApp o Instagram:</p>
+          <code data-enlace class="font-mono text-sm break-all">{Astro.url.origin}/r/{r.slug}</code>
+          <button data-copiar type="button" class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Copiar enlace</button>
+        </div>
+      )}
+      <section class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div class="grid content-start gap-4">
+          <span class="inline-flex items-center gap-2 justify-self-start rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
+            <i class="size-1.5 rounded-full bg-ok"></i>{r.estado === "abierta" ? "Abierta · sorteo verificable" : r.estado === "sorteada" ? "Sorteada" : "Cerrada"}
+          </span>
+          <h1 class="text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">{titulo}</h1>
+          {r.descripcion && <p class="max-w-[60ch] leading-relaxed whitespace-pre-line text-muted">{r.descripcion}</p>}
+          <ol class="grid gap-2">
+            {r.premios.map((p, i) => (
+              <li class="flex items-baseline gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+                <span class="text-xs font-semibold whitespace-nowrap text-muted uppercase">{nombrePremio(i)}</span>
+                <span class="font-semibold">{p}</span>
+              </li>
+            ))}
+          </ol>
+          <div class="flex flex-wrap gap-8">
+            <span><b class="block font-mono text-3xl font-semibold">{pesos(r.precio)}</b><span class="text-sm text-muted">por número</span></span>
+            <span><b class="block font-mono text-3xl font-semibold">{numeros.length - pagados - reservados}</b><span class="text-sm text-muted">números libres de {numeros.length}</span></span>
+          </div>
+          <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.</p>
+        </div>
+
+        <div class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
+          <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full rounded-full bg-ok" style={`width:${(pagados / numeros.length) * 100}%`}></b></div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-line align-middle"></i>Libre</span>
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-dashed border-muted align-middle"></i>Reservado ({reservados})</span>
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-sold align-middle"></i>Vendido ({pagados})</span>
+          </div>
+          <div class="grid grid-cols-10 gap-1 sm:gap-1.5" aria-label="Números de la rifa">
+            {numeros.map((n) => {
+              const e = estados.get(n);
+              return <span class:list={["grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs", clases[e ?? "libre"]]}>{n}</span>;
+            })}
+          </div>
+          <p class="rounded-lg bg-salvia px-3 py-2 text-sm">Muy pronto podrás elegir tus números y reservarlos aquí mismo.</p>
+        </div>
+      </section>
+    </div>
+  )}
+</Base>
+
+<script>
+  const boton = document.querySelector<HTMLButtonElement>("[data-copiar]");
+  boton?.addEventListener("click", async () => {
+    const texto = document.querySelector("[data-enlace]")?.textContent ?? "";
+    try { await navigator.clipboard.writeText(texto); boton.textContent = "Enlace copiado"; } catch {}
+  });
+</script>

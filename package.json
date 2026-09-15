@@ -15,7 +15,9 @@
     "dev:web": "npm run dev -w @rifaclara/web",
     "build": "npm run build -w @rifaclara/web",
     "test": "npm test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "local:api": "npm run dev -w @rifaclara/api",
+    "local:web": "npm run build && npm run local -w @rifaclara/web"
   },
   "allowScripts": {
     "esbuild": true,

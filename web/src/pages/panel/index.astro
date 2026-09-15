@@ -1,0 +1,67 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+import { fechaChile, pesos } from "../../lib/formato";
+
+export const prerender = false;
+
+interface ResumenRifa {
+  id: string; slug: string; titulo: string; estado: string; cierreEn: number;
+  desde: number; hasta: number; precio: number; pagados: number; reservados: number;
+}
+const yo = await apiServidor<{ usuario: { email: string } }>(Astro.request, "/api/yo");
+if (!yo.datos) return Astro.redirect("/ingresar");
+const { datos } = await apiServidor<{ rifas: ResumenRifa[] }>(Astro.request, "/api/rifas");
+const lista = datos?.rifas ?? [];
+const etiquetas: Record<string, [string, string]> = {
+  abierta: ["Abierta", "bg-ok-soft text-ok"],
+  cerrada: ["Cerrada", "bg-salvia text-ink"],
+  sorteada: ["Sorteada", "bg-pick text-pick-ink"],
+  cancelada: ["Cancelada", "bg-salvia text-muted"],
+};
+---
+<Base title="Mis rifas | Rifa Clara" description="Panel del organizador." noindex>
+  <section class="grid gap-8 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="grid gap-1">
+        <h1 class="text-4xl font-semibold tracking-tight">Mis rifas</h1>
+        <p class="text-sm text-muted">{yo.datos.usuario.email} · <button data-salir type="button" class="underline hover:text-ink">Salir</button></p>
+      </div>
+      <a href="/panel/nueva" class="rounded-xl bg-accent px-6 py-3 font-semibold text-accent-ink hover:brightness-110">Crear rifa</a>
+    </div>
+
+    {lista.length === 0 ? (
+      <div class="grid justify-items-start gap-3 rounded-2xl border border-dashed border-line p-8">
+        <h2 class="text-xl font-semibold">Todavía no tienes rifas</h2>
+        <p class="max-w-[56ch] text-muted">Crea tu primera rifa: premio, precio, cantidad de números y fecha de cierre. La página queda lista para compartir por WhatsApp.</p>
+        <a href="/panel/nueva" class="rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink">Crear mi primera rifa</a>
+      </div>
+    ) : (
+      <ul class="grid gap-4 md:grid-cols-2">
+        {lista.map((r) => {
+          const total = r.hasta - r.desde + 1;
+          const [texto, clase] = etiquetas[r.estado] ?? [r.estado, "bg-salvia"];
+          return (
+            <li class="grid gap-3 rounded-2xl border border-line bg-surface p-5">
+              <div class="flex items-start justify-between gap-3">
+                <h2 class="text-lg leading-snug font-semibold">{r.titulo}</h2>
+                <span class:list={["rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap", clase]}>{texto}</span>
+              </div>
+              <p class="text-sm text-muted">{total} números a {pesos(r.precio)} · cierra el {fechaChile(r.cierreEn)}</p>
+              <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full rounded-full bg-ok" style={`width:${(r.pagados / total) * 100}%`}></b></div>
+              <p class="font-mono text-xs text-muted">{r.pagados} pagados · {r.reservados} por confirmar · {total - r.pagados - r.reservados} libres</p>
+              <a href={`/r/${r.slug}`} class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Ver página pública</a>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </section>
+</Base>
+
+<script>
+  document.querySelector("[data-salir]")?.addEventListener("click", async () => {
+    await fetch("/api/auth/salir", { method: "POST" });
+    location.href = "/";
+  });
+</script>

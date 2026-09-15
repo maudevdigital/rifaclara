@@ -1,0 +1,43 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+<Base title="Entrar | Rifa Clara" description="Confirma tu ingreso a Rifa Clara." noindex>
+  <section class="mx-auto grid max-w-md gap-6 py-16 text-center">
+    <h1 class="text-4xl font-semibold tracking-tight">Entrar a Rifa Clara</h1>
+    <p class="text-muted">Presiona el botón para terminar de ingresar.</p>
+    <!-- Un botón en vez de entrar al abrir el enlace: así los antivirus de correo que abren enlaces no gastan el token. -->
+    <button data-entrar type="button" class="justify-self-center rounded-xl bg-accent px-8 py-3.5 font-semibold text-accent-ink hover:brightness-110 disabled:opacity-60">Entrar</button>
+    <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+  </section>
+</Base>
+
+<script>
+  const boton = document.querySelector<HTMLButtonElement>("[data-entrar]")!;
+  const mensaje = document.querySelector<HTMLElement>("[data-mensaje]")!;
+  const token = new URLSearchParams(location.search).get("token");
+  if (!token) {
+    boton.hidden = true;
+    mensaje.className = "min-h-5 text-sm text-danger";
+    mensaje.innerHTML = 'Falta el código del enlace. <a class="underline" href="/ingresar">Pide uno nuevo</a>.';
+  }
+  boton.addEventListener("click", async () => {
+    boton.disabled = true;
+    mensaje.className = "min-h-5 text-sm text-muted";
+    mensaje.textContent = "Entrando…";
+    try {
+      const res = await fetch("/api/auth/verificar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }) });
+      const datos = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(datos.error ?? "No se pudo entrar");
+      history.replaceState(null, "", "/ingresar/verificar");
+      location.href = "/panel";
+    } catch (err) {
+      mensaje.className = "min-h-5 text-sm text-danger";
+      mensaje.innerHTML = "";
+      mensaje.append((err as Error).message + " ");
+      const a = document.createElement("a");
+      a.href = "/ingresar"; a.className = "underline"; a.textContent = "Pedir otro enlace";
+      mensaje.append(a);
+      boton.disabled = false;
+    }
+  });
+</script>

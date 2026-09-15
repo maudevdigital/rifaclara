@@ -6,6 +6,9 @@
   // Solo se entra por el service binding de rifaclara-web.
   "workers_dev": false,
   "preview_urls": false,
+  // En local se sobrescriben con .dev.vars. RESEND_API_KEY es un secreto:
+  // npx wrangler secret put RESEND_API_KEY
+  "vars": { "SITIO": "https://rifaclara.maudev.cl", "ENTORNO": "produccion" },
   "d1_databases": [
     {
       "binding": "DB",

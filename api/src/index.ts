@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import { rondaDrand } from "@rifaclara/shared";
+import { auth, conSesion, limpiarAuth, type Entorno } from "./auth";
 import { borrarAntiguos, sorteos } from "./sorteos";
 import { listaEspera } from "./lista-espera";
+import { rifas } from "./rifas";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
-// que reenvía rifaclara.maudev.cl/api/* tal cual.
-const app = new Hono<{ Bindings: CloudflareBindings }>().basePath("/api");
+// que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
+const app = new Hono<Entorno>().basePath("/api");
+
+app.use("*", conSesion);
 
 app.get("/salud", (c) =>
   c.json({
@@ -15,6 +19,13 @@ app.get("/salud", (c) =>
   }),
 );
 
+app.get("/yo", (c) => {
+  const usuario = c.get("usuario");
+  return usuario ? c.json({ usuario }) : c.json({ error: "No has ingresado" }, 401);
+});
+
+app.route("/auth", auth);
+app.route("/rifas", rifas);
 app.route("/sorteos", sorteos);
 app.route("/lista-espera", listaEspera);
 
@@ -27,6 +38,6 @@ app.onError((e, c) => {
 export default {
   fetch: app.fetch,
   async scheduled(_evento, env, ctx) {
-    ctx.waitUntil(borrarAntiguos(env.DB));
+    ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));
   },
 } satisfies ExportedHandler<CloudflareBindings>;

@@ -24,10 +24,24 @@ Para levantar todo en local hacen falta dos terminales. Wrangler conecta el
 service binding entre ambas:
 
 ```bash
-npm run dev:api                                         # rifaclara-api en :8787
-npm run build && cd web && npx wrangler dev --port 8788
-# http://127.0.0.1:8788/api/salud → responde la API a través de la web
+npm run local:api   # rifaclara-api en :8787 (usa api/.dev.vars)
+npm run local:web   # compila y sirve la web en http://127.0.0.1:8788
 ```
+
+`local:web` usa `--local-upstream 127.0.0.1:8788`: sin eso, wrangler reescribe
+`Host` y `Origin` con `rifaclara.maudev.cl` (la ruta de producción) y la API
+rechaza las peticiones con sesión por origen distinto.
+
+`api/.dev.vars` (no se sube a git) necesita:
+
+```
+ENTORNO=local
+SITIO=http://127.0.0.1:8788
+RESEND_API_KEY=
+```
+
+Con `ENTORNO=local` no se envían correos: el enlace para ingresar aparece en la
+pantalla de ingreso y en la consola de la API.
 
 `npm run dev:web` (astro dev) sirve para trabajar las páginas.
 

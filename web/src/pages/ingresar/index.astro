@@ -1,0 +1,52 @@
+---
+import Base from "../../layouts/Base.astro";
+const campo = "w-full rounded-lg border border-line bg-bg px-3 py-3 text-ink focus:border-accent focus:outline-none";
+---
+<Base title="Ingresar | Rifa Clara" description="Entra a Rifa Clara con un enlace que llega a tu correo. Sin contraseñas." noindex>
+  <section class="mx-auto grid max-w-md gap-6 py-10">
+    <div class="grid gap-2">
+      <h1 class="text-4xl font-semibold tracking-tight">Ingresar</h1>
+      <p class="text-muted">Te enviamos un enlace a tu correo para entrar. Sin contraseñas.</p>
+    </div>
+    <form data-ingresar class="grid gap-4 rounded-2xl border border-line bg-surface p-5" novalidate>
+      <label class="grid gap-1 text-sm font-medium" for="ingresar-email">Correo
+        <input id="ingresar-email" name="email" type="email" autocomplete="email" required placeholder="tu@correo.cl" class={campo} />
+      </label>
+      <button type="submit" class="rounded-xl bg-accent px-6 py-3 font-semibold text-accent-ink hover:brightness-110 disabled:opacity-60">Enviarme el enlace</button>
+      <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+    </form>
+    <p class="text-xs text-muted">Al ingresar aceptas que guardemos tu correo para identificarte. <a class="underline" href="/privacidad">Privacidad</a>.</p>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-ingresar]")!;
+  const mensaje = form.querySelector<HTMLElement>("[data-mensaje]")!;
+  const boton = form.querySelector("button")!;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = String(new FormData(form).get("email") ?? "").trim();
+    if (!email) { mensaje.className = "min-h-5 text-sm text-danger"; mensaje.textContent = "Escribe tu correo."; return; }
+    boton.disabled = true;
+    mensaje.className = "min-h-5 text-sm text-muted";
+    mensaje.textContent = "Enviando…";
+    try {
+      const res = await fetch("/api/auth/enlace", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email }) });
+      const datos = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(datos.error ?? "No se pudo enviar");
+      mensaje.className = "min-h-5 text-sm text-ok";
+      mensaje.textContent = `Listo. Revisa ${email} (y la carpeta de spam): el enlace vence en 15 minutos.`;
+      // Solo en desarrollo local la API devuelve el enlace, porque no envía correos.
+      if (datos.enlaceLocal) {
+        const a = document.createElement("a");
+        a.href = datos.enlaceLocal; a.textContent = " Entrar (modo local)"; a.className = "font-semibold underline";
+        mensaje.append(a);
+      }
+    } catch (err) {
+      mensaje.className = "min-h-5 text-sm text-danger";
+      mensaje.textContent = (err as Error).message;
+    } finally {
+      boton.disabled = false;
+    }
+  });
+</script>
