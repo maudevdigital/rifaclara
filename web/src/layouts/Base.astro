@@ -8,7 +8,9 @@ interface Props {
   noindex?: boolean;
 }
 const { title, description, noindex = false } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+// Con build.format "file" la ruta llega como /ruleta.html al prerenderizar.
+const ruta = Astro.url.pathname.replace(/\.html$/, "").replace(/\/index$/, "/");
+const canonical = new URL(ruta, Astro.site);
 ---
 <html lang="es-CL">
   <head>
