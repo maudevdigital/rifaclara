@@ -40,9 +40,14 @@ function iniciar(raiz: HTMLElement) {
     resumen.textContent = `${n} ${n === 1 ? "número" : "números"}: ${[...elegidos].sort().join(", ")} · ${clp.format(n * precio)}`;
   };
 
+  const grilla = raiz.querySelector<HTMLElement>("[data-grilla]")!;
+  const botones = new Map<string, HTMLButtonElement>();
+
   raiz.querySelectorAll<HTMLButtonElement>("[data-numero]").forEach((b) => {
+    botones.set(b.dataset.numero!, b);
     b.addEventListener("click", () => {
       const n = b.dataset.numero!;
+      if (b.disabled) return;
       if (elegidos.has(n)) elegidos.delete(n);
       else if (elegidos.size >= maximo) {
         aviso.hidden = false;
@@ -77,12 +82,9 @@ function iniciar(raiz: HTMLElement) {
       const datos = await res.json().catch(() => ({}));
       if (res.status === 409 && datos.tomados) {
         // Marcar como tomados los que se ganó otra persona y quitarlos de la selección.
-        for (const n of datos.tomados as string[]) {
-          elegidos.delete(n);
-          const b = raiz.querySelector<HTMLButtonElement>(`[data-numero="${n}"]`);
-          if (b) { b.disabled = true; b.setAttribute("aria-pressed", "false"); b.className = b.dataset.claseTomado!; }
-        }
+        for (const n of datos.tomados as string[]) marcar(n, "r");
         pintar();
+        consultarPronto();
       }
       if (!res.ok) throw new Error(datos.error ?? "No se pudo reservar");
       try {
@@ -97,4 +99,113 @@ function iniciar(raiz: HTMLElement) {
     }
   });
 
+  // ---- Grilla en vivo ----
+  // Consulta un endpoint liviano con ETag: si nada cambió, el servidor responde
+  // 304 sin cuerpo. Cada 5 s tras un cambio, espaciando hasta 20 s si todo sigue
+  // igual; se detiene con la pestaña oculta y tras 15 min sin que nadie la toque.
+  type Estado = "libre" | "r" | "p";
+  const MINIMO = 5_000, MAXIMO = 20_000, INACTIVIDAD = 15 * 60_000;
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)");
+  const enVivo = raiz.querySelector<HTMLElement>("[data-en-vivo]");
+  const total = botones.size;
+  let etag = "";
+  let espera = MINIMO;
+  let temporizador: number | undefined;
+  let ultimaActividad = Date.now();
+
+  /** Cambia una casilla de estado. Devuelve true si estaba en la selección de esta persona. */
+  function marcar(n: string, estado: Estado): boolean {
+    const b = botones.get(n);
+    if (!b || b.dataset.estado === estado) return false;
+    const perdido = estado !== "libre" && elegidos.delete(n);
+    b.dataset.estado = estado;
+    b.disabled = estado !== "libre";
+    b.setAttribute("aria-pressed", "false");
+    b.className = grilla.dataset[estado === "libre" ? "claseLibre" : estado === "r" ? "claseR" : "claseP"]!;
+    if (estado === "libre") b.removeAttribute("aria-label");
+    else b.setAttribute("aria-label", `${n}, ${estado === "p" ? "vendido" : "reservado"}`);
+    if (!quieto.matches) {
+      b.animate(
+        [{ boxShadow: "0 0 0 3px var(--color-pick)", transform: "scale(1.12)" }, { boxShadow: "0 0 0 0 transparent", transform: "scale(1)" }],
+        { duration: 900, easing: "ease-out" },
+      );
+    }
+    return perdido;
+  }
+
+  function aplicar(tomados: { n: string; e: "p" | "r" }[]) {
+    const nuevos = new Map(tomados.map((t) => [t.n, t.e]));
+    const perdidos: string[] = [];
+    for (const n of botones.keys()) if (marcar(n, nuevos.get(n) ?? "libre")) perdidos.push(n);
+    const pagados = tomados.filter((t) => t.e === "p").length;
+    const reservados = tomados.length - pagados;
+    raiz.querySelector("[data-reservados]")!.textContent = String(reservados);
+    raiz.querySelector("[data-vendidos]")!.textContent = String(pagados);
+    raiz.querySelector<HTMLElement>("[data-progreso]")!.style.width = `${(pagados / total) * 100}%`;
+    const libres = document.querySelector("[data-libres]");
+    if (libres) libres.textContent = String(total - tomados.length);
+    if (perdidos.length) {
+      aviso.hidden = false;
+      aviso.textContent = perdidos.length === 1
+        ? `Otra persona acaba de reservar el ${perdidos[0]}. Lo quitamos de tu selección.`
+        : `Otra persona acaba de reservar los números ${perdidos.sort().join(", ")}. Los quitamos de tu selección.`;
+      pintar();
+    }
+  }
+
+  async function consultar() {
+    temporizador = undefined;
+    if (document.hidden || Date.now() - ultimaActividad > INACTIVIDAD) {
+      if (enVivo) enVivo.hidden = true;
+      return;
+    }
+    try {
+      const res = await fetch(`/api/rifas/publica/${encodeURIComponent(slug)}/estado`, {
+        cache: "no-store",
+        headers: etag ? { "if-none-match": etag } : {},
+      });
+      if (res.status === 404) return location.reload();
+      if (res.status === 304) {
+        espera = Math.min(espera * 1.5, MAXIMO);
+      } else if (res.ok) {
+        const datos = (await res.json()) as { estado: string; tomados: { n: string; e: "p" | "r" }[] };
+        // Cerró: al recargar, la página muestra el cierre y el sorteo.
+        if (datos.estado !== "abierta") return location.reload();
+        etag = res.headers.get("etag") ?? "";
+        aplicar(datos.tomados);
+        espera = MINIMO;
+      } else throw new Error(String(res.status));
+      if (enVivo) enVivo.hidden = false;
+    } catch {
+      if (enVivo) enVivo.hidden = true;
+      espera = Math.min(espera * 2, 60_000);
+    }
+    programar();
+  }
+
+  function programar() {
+    clearTimeout(temporizador);
+    temporizador = window.setTimeout(consultar, espera);
+  }
+
+  function consultarPronto() {
+    espera = MINIMO;
+    clearTimeout(temporizador);
+    temporizador = window.setTimeout(consultar, 0);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearTimeout(temporizador);
+    else { ultimaActividad = Date.now(); consultarPronto(); }
+  });
+  // Quien vuelve a tocar la página tras un rato quieta la reactiva al tiro.
+  for (const evento of ["pointerdown", "keydown", "scroll"] as const) {
+    addEventListener(evento, () => {
+      const dormida = Date.now() - ultimaActividad > INACTIVIDAD;
+      ultimaActividad = Date.now();
+      if (dormida) consultarPronto();
+    }, { passive: true });
+  }
+  if (enVivo) enVivo.hidden = false;
+  programar();
 }

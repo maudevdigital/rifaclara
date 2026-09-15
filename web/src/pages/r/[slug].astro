@@ -27,11 +27,14 @@ const reservados = r?.tomados.filter((t) => t.e === "r").length ?? 0;
 const titulo = r ? (/^rifa\b/i.test(r.titulo) ? r.titulo : `Rifa ${r.titulo}`) : "Rifa no encontrada";
 const nueva = Astro.url.searchParams.has("nueva");
 const abierta = r?.estado === "abierta" && Date.now() / 1000 < r.cierreEn;
+const base = "grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs";
 const clases = {
-  libre: "border-line bg-surface text-ink",
-  r: "border-dashed border-muted text-muted",
-  p: "border-transparent bg-sold text-sold-ink line-through",
+  libre: `${base} border-line bg-surface text-ink`,
+  elegible: `${base} border-line bg-surface text-ink cursor-pointer hover:border-accent aria-pressed:border-pick aria-pressed:bg-pick aria-pressed:font-semibold aria-pressed:text-pick-ink`,
+  r: `${base} border-dashed border-muted text-muted`,
+  p: `${base} border-transparent bg-sold text-sold-ink line-through`,
 };
+const etiqueta = (n: string, e?: "p" | "r") => (e ? `${n}, ${e === "p" ? "vendido" : "reservado"}` : undefined);
 ---
 <Base
   title={`${titulo} | Rifa Clara`}
@@ -99,29 +102,35 @@ const clases = {
           </ol>
           <div class="flex flex-wrap gap-8">
             <span><b class="block font-mono text-3xl font-semibold">{pesos(r.precio)}</b><span class="text-sm text-muted">por número</span></span>
-            <span><b class="block font-mono text-3xl font-semibold">{numeros.length - pagados - reservados}</b><span class="text-sm text-muted">números libres de {numeros.length}</span></span>
+            <span><b data-libres class="block font-mono text-3xl font-semibold">{numeros.length - pagados - reservados}</b><span class="text-sm text-muted">números libres de {numeros.length}</span></span>
           </div>
           <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.{r.estado === "abierta" && <> <a class="text-accent underline" href={`/r/${r.slug}/sorteo`}>Página del sorteo en vivo</a></>}</p>
         </div>
 
         <div data-rifa data-slug={r.slug} data-precio={r.precio} data-maximo={r.maxPorPersona} class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
-          <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full rounded-full bg-ok" style={`width:${(pagados / numeros.length) * 100}%`}></b></div>
-          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+          <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b data-progreso class="block h-full rounded-full bg-ok transition-[width] duration-500" style={`width:${(pagados / numeros.length) * 100}%`}></b></div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
             <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-line align-middle"></i>Libre</span>
             <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-pick align-middle"></i>Tu elección</span>
-            <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-dashed border-muted align-middle"></i>Reservado ({reservados})</span>
-            <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-sold align-middle"></i>Vendido ({pagados})</span>
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-dashed border-muted align-middle"></i>Reservado (<span data-reservados>{reservados}</span>)</span>
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-sold align-middle"></i>Vendido (<span data-vendidos>{pagados}</span>)</span>
+            {abierta && (
+              <span data-en-vivo hidden class="ml-auto inline-flex items-center gap-1.5 font-mono text-ok" title="La grilla se actualiza sola cuando alguien reserva">
+                <i class="relative inline-flex size-2"><i class="absolute inline-flex size-full rounded-full bg-ok opacity-60 motion-safe:animate-ping"></i><i class="relative inline-flex size-2 rounded-full bg-ok"></i></i>En vivo
+              </span>
+            )}
           </div>
           {abierta && <p class="text-sm text-muted">Toca los números que quieres. Puedes elegir hasta {r.maxPorPersona}.</p>}
-          <div class:list={["grid grid-cols-10 gap-1 sm:gap-1.5", numeros.length > 200 && "md:grid-cols-20"]} aria-label="Números de la rifa">
+          <div data-grilla data-clase-libre={clases.elegible} data-clase-r={clases.r} data-clase-p={clases.p}
+            class:list={["grid grid-cols-10 gap-1 sm:gap-1.5", numeros.length > 200 && "md:grid-cols-20"]} aria-label="Números de la rifa">
             {numeros.map((n) => {
               const e = estados.get(n);
-              const base = "grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs";
-              return abierta && !e ? (
-                <button type="button" data-numero={n} aria-pressed="false" data-clase-tomado={`${base} ${clases.r}`}
-                  class={`${base} ${clases.libre} cursor-pointer hover:border-accent aria-pressed:border-pick aria-pressed:bg-pick aria-pressed:font-semibold aria-pressed:text-pick-ink`}>{n}</button>
+              // Abierta: todos son botones para que la grilla en vivo pueda bloquear o liberar cualquiera.
+              return abierta ? (
+                <button type="button" data-numero={n} data-estado={e ?? "libre"} disabled={!!e} aria-pressed="false"
+                  aria-label={etiqueta(n, e)} class={e ? clases[e] : clases.elegible}>{n}</button>
               ) : (
-                <span class:list={[base, clases[e ?? "libre"]]} aria-label={`${n}, ${e === "p" ? "vendido" : e === "r" ? "reservado" : "no disponible"}`}>{n}</span>
+                <span class={clases[e ?? "libre"]} aria-label={etiqueta(n, e) ?? `${n}, no disponible`}>{n}</span>
               );
             })}
           </div>

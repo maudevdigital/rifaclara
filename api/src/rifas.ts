@@ -7,7 +7,7 @@ import { baseDeSlug, esquemaNuevaRifa } from "./rifas-esquema";
 import { mostrarCodigo, vencerReservas } from "./reservas";
 import { avanzarRifa } from "./cierre";
 import { resolverSorteo } from "./sorteos";
-import { tramoPara } from "@rifaclara/shared";
+import { sha256, tramoPara } from "@rifaclara/shared";
 
 interface FilaRifa {
   id: string;
@@ -127,6 +127,30 @@ rifas.get("/indexables", async (c) => {
      ORDER BY actualizado_en DESC LIMIT 5000`,
   ).bind(ahora() - 60 * 86400).all<{ slug: string; actualizadoEn: number }>();
   return c.json({ rifas: results }, 200, { "cache-control": "public, max-age=3600" });
+});
+
+/**
+ * Estado liviano de la grilla para actualizarla en vivo: solo qué números están
+ * tomados. Responde 304 si nada cambió desde la última consulta (ETag).
+ */
+rifas.get("/publica/:slug/estado", async (c) => {
+  const r = await c.env.DB.prepare("SELECT id, estado, cierre_en FROM rifas WHERE slug = ? AND estado NOT IN ('cancelada', 'pago_pendiente')")
+    .bind(c.req.param("slug")).first<{ id: string; estado: string; cierre_en: number }>();
+  if (!r) return c.json({ error: "No existe esa rifa" }, 404);
+  await vencerReservas(c.env.DB, r.id);
+  const { results } = await c.env.DB.prepare(
+    `SELECT n.numero AS n, CASE s.estado WHEN 'pagada' THEN 'p' ELSE 'r' END AS e
+     FROM numeros n JOIN reservas s ON s.codigo = n.reserva_codigo
+     WHERE n.rifa_id = ? AND s.estado IN ('pendiente', 'pagada') ORDER BY n.numero`,
+  ).bind(r.id).all<{ n: string; e: "p" | "r" }>();
+  // Pasada la hora de cierre la página se recarga para mostrar el sorteo.
+  const estado = r.estado === "abierta" && ahora() >= r.cierre_en ? "cerrando" : r.estado;
+  const cuerpo = JSON.stringify({ estado, tomados: results });
+  const etag = `"${(await sha256(cuerpo)).slice(0, 16)}"`;
+  const cabeceras = { etag, "cache-control": "no-cache" };
+  // Al comprimir, Cloudflare puede volver débil el ETag (W/"..."): da lo mismo para comparar.
+  if (c.req.header("if-none-match")?.replace(/^W\//, "") === etag) return c.body(null, 304, cabeceras);
+  return c.body(cuerpo, 200, { ...cabeceras, "content-type": "application/json" });
 });
 
 /** Vista pública: sin datos del organizador ni de los participantes. */
