@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Botón "Run workflow" en GitHub: verifica y despliega todo, haya cambios o no.
+  # Botón "Run workflow" en GitHub: verifica y vuelve a desplegar todo.
   workflow_dispatch:
 
 concurrency:
@@ -15,20 +15,12 @@ jobs:
   verificar:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ github.event_name == 'workflow_dispatch' || steps.cambios.outputs.api == 'true' }}
-      web: ${{ github.event_name == 'workflow_dispatch' || steps.cambios.outputs.web == 'true' }}
       token: ${{ steps.token.outputs.hay }}
     steps:
       # Sin el secreto CLOUDFLARE_API_TOKEN se verifica todo pero no se despliega.
       - id: token
         run: echo "hay=${{ secrets.CLOUDFLARE_API_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: cambios
-        with:
-          filters: |
-            api: ['api/**', 'shared/**', 'package-lock.json']
-            web: ['web/**', 'shared/**', 'package-lock.json']
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -38,10 +30,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
 
+  # Cada push a main despliega las dos partes (tarda un minuto y no cuesta nada):
+  # así un despliegue fallido nunca deja una de ellas atrasada.
   # La API va primero: la web nueva puede depender de un endpoint nuevo.
   desplegar-api:
     needs: verificar
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.verificar.outputs.api == 'true' && needs.verificar.outputs.token == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.verificar.outputs.token == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +60,7 @@ jobs:
     needs: [verificar, desplegar-api]
     if: >-
       always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      && needs.verificar.result == 'success' && needs.verificar.outputs.web == 'true' && needs.verificar.outputs.token == 'true'
+      && needs.verificar.result == 'success' && needs.verificar.outputs.token == 'true'
       && needs.desplegar-api.result != 'failure'
     runs-on: ubuntu-latest
     steps:

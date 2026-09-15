@@ -64,8 +64,8 @@ Los sorteos se borran a los 90 días con el cron diario de la API.
 ## Despliegue
 
 `.github/workflows/ci.yml` corre pruebas, tipos y build en cada push. En `main`
-despliega solo lo que cambió: primero la API y después la web. Un cambio en
-`shared/` despliega las dos.
+despliega siempre las dos partes: primero migra D1 y despliega la API, después la
+web. En GitHub, *Actions → CI y despliegue → Run workflow* vuelve a desplegar todo.
 
 En el repo de GitHub hay que crear dos secretos:
 
