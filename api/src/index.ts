@@ -5,6 +5,7 @@ import { borrarAntiguos, sorteos } from "./sorteos";
 import { listaEspera } from "./lista-espera";
 import { rifas } from "./rifas";
 import { reservas, vencerReservas } from "./reservas";
+import { procesarCierres } from "./cierre";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
@@ -40,7 +41,7 @@ app.onError((e, c) => {
 export default {
   fetch: app.fetch,
   async scheduled(evento, env, ctx) {
-    ctx.waitUntil(vencerReservas(env.DB));
+    ctx.waitUntil(vencerReservas(env.DB).then(() => procesarCierres(env.DB)));
     const hora = new Date(evento.scheduledTime);
     if (hora.getUTCHours() === 7 && hora.getUTCMinutes() < 10) {
       ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));

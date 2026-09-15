@@ -67,6 +67,30 @@ async function resolver(db: D1Database, f: Fila): Promise<Fila> {
   }
 }
 
+/**
+ * Prepara el registro de un sorteo: lista, huella y una ronda de drand futura
+ * según el reloj del servidor. Devuelve la sentencia para poder incluirla en
+ * un batch (el cierre de una rifa la guarda junto con el cambio de estado).
+ */
+export async function nuevoSorteo(
+  db: D1Database,
+  { tipo, titulo, lista, premios }: { tipo: string; titulo?: string | null; lista: string[]; premios: number },
+): Promise<{ sentencia: D1PreparedStatement; creado: SorteoCreado }> {
+  const huella = await sha256(lista.join("\n"));
+  const ronda = rondaDrand(Date.now() / 1000) + 1;
+  const id = generarId();
+  const sentencia = db
+    .prepare("INSERT INTO sorteos (id, tipo, titulo, lista, huella, ronda, premios, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(id, tipo, titulo || null, JSON.stringify(lista), huella, ronda, premios, ahora());
+  return { sentencia, creado: { id, huella, ronda, momento: momentoRonda(ronda) } };
+}
+
+/** Lee un sorteo y lo completa si su ronda ya se emitió. */
+export async function resolverSorteo(db: D1Database, id: string): Promise<SorteoPublico | null> {
+  const fila = await db.prepare("SELECT * FROM sorteos WHERE id = ?").bind(id).first<Fila>();
+  return fila ? publico(await resolver(db, fila)) : null;
+}
+
 export const sorteos = new Hono<{ Bindings: CloudflareBindings }>();
 
 sorteos.post("/", async (c) => {
@@ -79,17 +103,9 @@ sorteos.post("/", async (c) => {
   if (!datos.success) return c.json({ error: datos.error.issues[0]?.message ?? "Datos inválidos" }, 400);
 
   const { tipo, premios, titulo } = datos.data;
-  const lista = lineasDe(datos.data);
-  const huella = await sha256(lista.join("\n"));
-  // La ronda se fija con el reloj del servidor y es siempre futura.
-  const ronda = rondaDrand(Date.now() / 1000) + 1;
-  const id = generarId();
-  await c.env.DB.prepare(
-    "INSERT INTO sorteos (id, tipo, titulo, lista, huella, ronda, premios, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-  )
-    .bind(id, tipo, titulo || null, JSON.stringify(lista), huella, ronda, premios, ahora())
-    .run();
-  return c.json({ id, huella, ronda, momento: momentoRonda(ronda) } satisfies SorteoCreado, 201);
+  const { sentencia, creado } = await nuevoSorteo(c.env.DB, { tipo, titulo, lista: lineasDe(datos.data), premios });
+  await sentencia.run();
+  return c.json(creado, 201);
 });
 
 sorteos.get("/:id", async (c) => {
@@ -99,7 +115,10 @@ sorteos.get("/:id", async (c) => {
   return c.json(publico(f), 200, { "cache-control": f.azar ? "public, max-age=300" : "no-store" });
 });
 
-/** Borra sorteos de más de 90 días (Ley 21.719: no guardar más de lo necesario). */
+/**
+ * Borra los sorteos de las herramientas con más de 90 días (Ley 21.719: no
+ * guardar más de lo necesario). Los de rifas se conservan junto con la rifa.
+ */
 export async function borrarAntiguos(db: D1Database) {
-  await db.prepare("DELETE FROM sorteos WHERE creado_en < ?").bind(ahora() - 90 * 86400).run();
+  await db.prepare("DELETE FROM sorteos WHERE creado_en < ? AND tipo != 'plataforma'").bind(ahora() - 90 * 86400).run();
 }

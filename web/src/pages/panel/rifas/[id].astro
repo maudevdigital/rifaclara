@@ -2,6 +2,7 @@
 import Base from "../../../layouts/Base.astro";
 import { apiServidor } from "../../../lib/api-servidor";
 import { fechaChile, pesos } from "../../../lib/formato";
+import { nombrePremio } from "../../../lib/sorteo-remoto";
 
 export const prerender = false;
 
@@ -10,7 +11,9 @@ interface Reserva {
   estado: "pendiente" | "pagada" | "vencida" | "liberada"; venceEn: number; creadoEn: number; pagadaEn: number | null;
 }
 interface Datos {
-  rifa: { id: string; slug: string; titulo: string; estado: string; precio: number; desde: number; hasta: number; cierreEn: number; zonaHoraria: string };
+  rifa: { id: string; slug: string; titulo: string; estado: string; precio: number; desde: number; hasta: number; cierreEn: number; zonaHoraria: string; premios: string[] };
+  sorteo: { id: string; estado: string; ronda: number; momento: number; numerosEnSorteo: number } | null;
+  ganadores: { premio: number; numero: string; nombre: string | null; telefono: string | null; codigo: string | null }[];
   reservas: Reserva[];
 }
 const { estado, datos } = await apiServidor<Datos>(Astro.request, `/api/rifas/${encodeURIComponent(Astro.params.id ?? "")}/reservas`);
@@ -43,6 +46,29 @@ const whatsapp = (x: Reserva) =>
         <p class="text-sm text-muted">Cierra el {fechaChile(r.cierreEn, r.zonaHoraria)} · <a class="text-accent underline" href={`/r/${r.slug}`}>ver página pública</a></p>
       </div>
 
+      {r.estado !== "abierta" && (
+        <div class="grid gap-3 rounded-2xl border border-line bg-surface p-5">
+          {datos!.ganadores.length ? (
+            <>
+              <h2 class="text-xl font-semibold">Ganadores</h2>
+              <ul class="grid gap-2 md:grid-cols-2">
+                {datos!.ganadores.map((g) => (
+                  <li class="grid gap-1 rounded-xl border border-line bg-bg px-4 py-3">
+                    <span class="flex items-center justify-between gap-3"><span class="text-xs text-muted uppercase">{nombrePremio(g.premio)} · {r.premios[g.premio]}</span><b class="rounded-md bg-pick px-2.5 py-0.5 font-mono text-lg text-pick-ink">{g.numero}</b></span>
+                    <span>{g.nombre} · <span class="font-mono text-xs">{g.codigo}</span></span>
+                    {g.telefono && <a class="justify-self-start text-sm font-semibold text-accent underline" target="_blank" rel="noopener" href={`https://wa.me/${g.telefono}?text=${encodeURIComponent(`¡Hola ${g.nombre}! Ganaste el ${nombrePremio(g.premio)} (${r.premios[g.premio]}) de "${r.titulo}" con el número ${g.numero}. Coordinemos la entrega.`)}`}>Avisarle por WhatsApp (+{g.telefono})</a>}
+                  </li>
+                ))}
+              </ul>
+              <a class="text-sm text-accent underline" href={`/sorteo/${datos!.sorteo!.id}`}>Comprobante del sorteo para compartir</a>
+            </>
+          ) : datos!.sorteo ? (
+            <p>La lista de {datos!.sorteo.numerosEnSorteo} números pagados está sellada. El resultado sale con la ronda {datos!.sorteo.ronda} de drand. <a class="text-accent underline" href={`/r/${r.slug}/sorteo`}>Ver en vivo</a></p>
+          ) : (
+            <p>La rifa cerró sin números pagados: no hubo sorteo.</p>
+          )}
+        </div>
+      )}
       <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Pagados", pagados], ["Por confirmar", porConfirmar], ["Libres", total - pagados - porConfirmar], ["Recaudado", pesos(pagados * r.precio)]].map(([k, v]) => (
           <div class="grid gap-1 rounded-xl border border-line bg-surface p-4"><span class="text-xs text-muted">{k}</span><b class="font-mono text-2xl">{v}</b></div>

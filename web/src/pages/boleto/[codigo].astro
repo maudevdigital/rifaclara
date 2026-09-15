@@ -2,12 +2,14 @@
 import Base from "../../layouts/Base.astro";
 import { apiServidor } from "../../lib/api-servidor";
 import { fechaChile, pesos } from "../../lib/formato";
+import { nombrePremio } from "../../lib/sorteo-remoto";
 
 export const prerender = false;
 
 interface Boleto {
   codigo: string; nombre: string; telefono: string; estado: "pendiente" | "pagada" | "vencida" | "liberada";
   numeros: string[]; venceEn: number; pagadaEn: number | null;
+  resultado: { sorteoId: string; estado: "pendiente" | "resuelto"; huellaBoleto: string; enLista: string[]; ganados: { premio: number; numero: string }[] } | null;
   rifa: { slug: string; titulo: string; premios: string[]; precio: number; cierreEn: number; zonaHoraria: string; mediosPago: string; whatsapp: string | null; estado: string };
 }
 const { estado: http, datos: b } = await apiServidor<Boleto>(Astro.request, `/api/reservas/${encodeURIComponent(Astro.params.codigo ?? "")}`);
@@ -37,6 +39,26 @@ const nuevo = Astro.url.searchParams.has("nuevo");
     <section class="mx-auto grid max-w-xl gap-5 py-6">
       {nuevo && b.estado === "pendiente" && (
         <p class="rounded-xl bg-ok-soft px-4 py-3 text-sm font-semibold text-ok">✓ Números reservados. Ahora paga y avísale a quien organiza.</p>
+      )}
+      {b.resultado && (
+        <div class:list={["grid gap-2 rounded-2xl p-5", b.resultado.ganados.length ? "bg-pick text-pick-ink" : "border border-line bg-surface"]}>
+          {b.resultado.estado === "pendiente" ? (
+            <><b>El sorteo se está haciendo ahora</b><a class="justify-self-start text-sm font-semibold underline" href={`/r/${b.rifa.slug}/sorteo`}>Verlo en vivo</a></>
+          ) : b.resultado.ganados.length ? (
+            <>
+              <b class="font-display text-2xl">¡Ganaste!</b>
+              {b.resultado.ganados.map((g) => <p>{nombrePremio(g.premio)}{b.rifa.premios[g.premio] ? `: ${b.rifa.premios[g.premio]}` : ""} con el número <b class="font-mono">{g.numero}</b>.</p>)}
+              <p class="text-sm">Quien organiza te va a contactar para coordinar la entrega.</p>
+            </>
+          ) : b.resultado.enLista.length ? (
+            <p>Tus números ({b.resultado.enLista.join(", ")}) participaron en el sorteo, pero esta vez no salieron. ¡Gracias por apoyar!</p>
+          ) : (
+            <p>Tus números no entraron al sorteo porque la reserva no estaba pagada al cierre.</p>
+          )}
+          {b.resultado.estado === "resuelto" && (
+            <p class="text-xs opacity-80">Huella de tu boleto en la lista: <code class="font-mono break-all">{b.resultado.huellaBoleto.slice(0, 16)}…</code> · <a class="underline" href={`/sorteo/${b.resultado.sorteoId}`}>ver comprobante y verificar</a></p>
+          )}
+        </div>
       )}
       <article class="overflow-hidden rounded-2xl border border-line bg-surface">
         <div class="grid gap-3 p-5">

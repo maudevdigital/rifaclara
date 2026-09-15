@@ -39,9 +39,14 @@ export function lineasDe({ tipo, nombres }: Pick<NuevoSorteo, "tipo" | "nombres"
   return nombres.map((n, i) => `${formatearNumero(i, nombres.length)}:${n}`);
 }
 
-/** Lo que se muestra de una línea: "07:Camila" → "Camila"; en rifas, el número. */
+/**
+ * Lo que se muestra de una línea: "07:Camila" → "Camila". En el sorteo de rifa
+ * la línea es el número; en las rifas de la plataforma, "047:huella" → "047".
+ */
 export function nombreDe(linea: string, tipo = "ruleta"): string {
-  return tipo === "rifa" ? linea : linea.slice(linea.indexOf(":") + 1);
+  if (tipo === "rifa") return linea;
+  if (tipo === "plataforma") return linea.slice(0, linea.indexOf(":"));
+  return linea.slice(linea.indexOf(":") + 1);
 }
 
 // Sin 0/o, 1/l/i para que el id se pueda dictar sin confusiones.

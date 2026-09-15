@@ -11,6 +11,10 @@ interface RifaPublica {
   desde: number; hasta: number; cierreEn: number; zonaHoraria: string; estado: string;
   horasReserva: number; maxPorPersona: number; sorteoId: string | null;
   tomados: { n: string; e: "p" | "r" }[];
+  resultado: {
+    sorteoId: string; estado: "pendiente" | "resuelto"; ronda: number; momento: number; huella: string;
+    numerosEnSorteo: number; premios: number; ganadores: { premio: number; numero: string }[];
+  } | null;
 }
 const { estado, datos: r } = await apiServidor<RifaPublica>(Astro.request, `/api/rifas/publica/${encodeURIComponent(Astro.params.slug ?? "")}`);
 if (!r) Astro.response.status = estado === 404 ? 404 : 502;
@@ -50,10 +54,36 @@ const clases = {
           <button data-copiar type="button" class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Copiar enlace</button>
         </div>
       )}
+      {r.estado !== "abierta" && (
+        <section class="grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+          {r.resultado?.estado === "resuelto" ? (
+            <>
+              <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Resultado del sorteo</span>
+              <ol class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {r.resultado.ganadores.map((g) => (
+                  <li class="flex items-center justify-between gap-3 rounded-xl border border-line bg-bg px-4 py-3">
+                    <span><span class="block text-xs text-muted uppercase">{nombrePremio(g.premio)}</span><span class="font-semibold">{r.premios[g.premio]}</span></span>
+                    <span class="rounded-md bg-pick px-3 py-1 font-mono text-2xl font-semibold text-pick-ink">{g.numero}</span>
+                  </li>
+                ))}
+              </ol>
+              <p class="text-sm text-muted">Sorteo entre {r.resultado.numerosEnSorteo} números pagados con la ronda {r.resultado.ronda} de drand. <a class="text-accent underline" href={`/sorteo/${r.resultado.sorteoId}`}>Ver comprobante y verificar</a></p>
+            </>
+          ) : r.resultado ? (
+            <>
+              <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Sorteo en curso</span>
+              <p>La lista de {r.resultado.numerosEnSorteo} números pagados ya está sellada. El resultado sale con la ronda {r.resultado.ronda} de drand, en segundos.</p>
+              <a href={`/r/${r.slug}/sorteo`} class="justify-self-start rounded-xl bg-accent px-5 py-3 font-semibold text-accent-ink">Ver el sorteo en vivo</a>
+            </>
+          ) : (
+            <p>Esta rifa cerró sin números pagados, así que no hubo sorteo.</p>
+          )}
+        </section>
+      )}
       <section class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div class="grid content-start gap-4">
           <span class="inline-flex items-center gap-2 justify-self-start rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
-            <i class="size-1.5 rounded-full bg-ok"></i>{r.estado === "abierta" ? "Abierta · sorteo verificable" : r.estado === "sorteada" ? "Sorteada" : "Cerrada"}
+            <i class="size-1.5 rounded-full bg-ok"></i>{r.estado === "abierta" ? "Abierta · sorteo verificable" : r.estado === "sorteada" ? "Sorteada" : "Cerrada · sorteando"}
           </span>
           <h1 class="text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">{titulo}</h1>
           {r.descripcion && <p class="max-w-[60ch] leading-relaxed whitespace-pre-line text-muted">{r.descripcion}</p>}
@@ -69,7 +99,7 @@ const clases = {
             <span><b class="block font-mono text-3xl font-semibold">{pesos(r.precio)}</b><span class="text-sm text-muted">por número</span></span>
             <span><b class="block font-mono text-3xl font-semibold">{numeros.length - pagados - reservados}</b><span class="text-sm text-muted">números libres de {numeros.length}</span></span>
           </div>
-          <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.</p>
+          <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.{r.estado === "abierta" && <> <a class="text-accent underline" href={`/r/${r.slug}/sorteo`}>Página del sorteo en vivo</a></>}</p>
         </div>
 
         <div data-rifa data-slug={r.slug} data-precio={r.precio} data-maximo={r.maxPorPersona} class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">

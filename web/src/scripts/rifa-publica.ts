@@ -5,6 +5,25 @@ if (raiz) iniciar(raiz);
 
 function iniciar(raiz: HTMLElement) {
   const slug = raiz.dataset.slug!;
+  const CLAVE = `rifaclara:boletos:${slug}`;
+
+  // Boletos que esta persona ya reservó en esta rifa, desde este navegador.
+  try {
+    const guardados = JSON.parse(localStorage.getItem(CLAVE) ?? "[]") as string[];
+    const lista = raiz.querySelector<HTMLElement>("[data-mis-boletos]")!;
+    if (guardados.length) {
+      lista.hidden = false;
+      for (const c of guardados) {
+        const a = document.createElement("a");
+        a.href = `/boleto/${c}`; a.textContent = c; a.className = "font-mono text-sm text-accent underline underline-offset-2";
+        lista.append(a);
+      }
+    }
+  } catch {}
+
+  // Rifa cerrada: no hay grilla para elegir ni formulario.
+  if (!raiz.querySelector("[data-reservar]")) return;
+
   const precio = Number(raiz.dataset.precio);
   const maximo = Number(raiz.dataset.maximo);
   const clp = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
@@ -14,7 +33,6 @@ function iniciar(raiz: HTMLElement) {
   const form = raiz.querySelector<HTMLFormElement>("[data-reservar]")!;
   const mensaje = raiz.querySelector<HTMLElement>("[data-mensaje]")!;
   const aviso = raiz.querySelector<HTMLElement>("[data-aviso]")!;
-  const CLAVE = `rifaclara:boletos:${slug}`;
 
   const pintar = () => {
     const n = elegidos.size;
@@ -79,17 +97,4 @@ function iniciar(raiz: HTMLElement) {
     }
   });
 
-  // Boletos que esta persona ya reservó en esta rifa, desde este navegador.
-  try {
-    const guardados = JSON.parse(localStorage.getItem(CLAVE) ?? "[]") as string[];
-    const lista = raiz.querySelector<HTMLElement>("[data-mis-boletos]")!;
-    if (guardados.length) {
-      lista.hidden = false;
-      for (const c of guardados) {
-        const a = document.createElement("a");
-        a.href = `/boleto/${c}`; a.textContent = c; a.className = "font-mono text-sm text-accent underline underline-offset-2";
-        lista.append(a);
-      }
-    }
-  } catch {}
 }

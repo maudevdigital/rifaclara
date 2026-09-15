@@ -51,3 +51,30 @@ if (boton && pasos && datos) {
     }
   });
 }
+
+// Rifas: cada participante comprueba que su boleto estuvo en la lista sellada.
+const buscador = document.querySelector<HTMLFormElement>("[data-buscar-boleto]");
+if (buscador && datos) {
+  const s = JSON.parse(datos.textContent ?? "{}") as SorteoPublico;
+  const salida = buscador.querySelector<HTMLElement>("[data-resultado-boleto]")!;
+  buscador.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const bruto = String(new FormData(buscador).get("codigo") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^RC/, "");
+    if (bruto.length !== 10) {
+      salida.className = "min-h-5 text-sm text-danger";
+      salida.textContent = "El código tiene la forma RC-XXXXX-XXXXX.";
+      return;
+    }
+    const codigo = `RC-${bruto.slice(0, 5)}-${bruto.slice(5)}`;
+    const huella = await sha256(codigo);
+    const mios = s.lista.filter((l) => l.endsWith(`:${huella}`));
+    document.querySelectorAll("[data-linea]").forEach((li) => li.classList.toggle("outline-2", mios.includes(li.getAttribute("data-linea")!)));
+    const numeros = mios.map((l) => l.slice(0, l.indexOf(":")));
+    const ganados = s.ganadores.filter((g) => mios.includes(g.linea));
+    salida.className = `min-h-5 text-sm ${mios.length ? "text-ok" : "text-danger"}`;
+    salida.textContent = mios.length
+      ? `✓ Tu boleto ${codigo} participó con ${numeros.length === 1 ? "el número" : "los números"} ${numeros.join(", ")}.` +
+        (ganados.length ? ` ¡Ganaste con el ${ganados.map((g) => g.nombre).join(" y el ")}!` : "")
+      : `✗ Ninguna línea corresponde a ${codigo}. Revisa el código; si tu reserva no se pagó antes del cierre, no entró al sorteo.`;
+  });
+}

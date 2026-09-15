@@ -5,6 +5,8 @@ import { eventoRifa } from "./eventos";
 import { generarId } from "./lista";
 import { baseDeSlug, esquemaNuevaRifa } from "./rifas-esquema";
 import { mostrarCodigo, vencerReservas } from "./reservas";
+import { avanzarRifa } from "./cierre";
+import { resolverSorteo } from "./sorteos";
 
 interface FilaRifa {
   id: string;
@@ -75,6 +77,19 @@ rifas.get("/:id/reservas", requiereUsuario, async (c) => {
     .bind(c.req.param("id"), c.get("usuario")!.id).first<FilaRifa>();
   if (!r) return c.json({ error: "No existe esa rifa en tu cuenta." }, 404);
   await vencerReservas(c.env.DB, r.id);
+  await avanzarRifa(c.env.DB, r.id);
+  const actual = (await c.env.DB.prepare("SELECT estado, sorteo_id FROM rifas WHERE id = ?").bind(r.id).first<{ estado: string; sorteo_id: string | null }>())!;
+  r.estado = actual.estado;
+  r.sorteo_id = actual.sorteo_id;
+  const s = r.sorteo_id ? await resolverSorteo(c.env.DB, r.sorteo_id) : null;
+  // El organizador ve a quién le tocó cada premio para poder contactarlo.
+  const ganadores = [];
+  for (const g of s?.ganadores ?? []) {
+    const p = await c.env.DB.prepare(
+      "SELECT s.nombre, s.telefono, s.codigo FROM numeros n JOIN reservas s ON s.codigo = n.reserva_codigo WHERE n.rifa_id = ? AND n.numero = ?",
+    ).bind(r.id, g.nombre).first<{ nombre: string; telefono: string; codigo: string }>();
+    ganadores.push({ premio: g.premio, numero: g.nombre, nombre: p?.nombre ?? null, telefono: p?.telefono ?? null, codigo: p ? mostrarCodigo(p.codigo) : null });
+  }
   const { results } = await c.env.DB.prepare(
     `SELECT codigo, nombre, telefono, numeros, estado, vence_en AS venceEn, creado_en AS creadoEn, pagada_en AS pagadaEn
      FROM reservas WHERE rifa_id = ? ORDER BY (estado = 'pendiente') DESC, creado_en DESC LIMIT 500`,
@@ -82,18 +97,25 @@ rifas.get("/:id/reservas", requiereUsuario, async (c) => {
   return c.json({
     rifa: {
       id: r.id, slug: r.slug, titulo: r.titulo, estado: r.estado, precio: r.precio, desde: r.desde, hasta: r.hasta,
-      cierreEn: r.cierre_en, zonaHoraria: r.zona_horaria, sorteoId: r.sorteo_id,
+      cierreEn: r.cierre_en, zonaHoraria: r.zona_horaria, sorteoId: r.sorteo_id, premios: JSON.parse(r.premios) as string[],
     },
+    sorteo: s && { id: s.id, estado: s.estado, ronda: s.ronda, momento: s.momento, numerosEnSorteo: s.lista.length },
+    ganadores,
     reservas: results.map((x) => ({ ...x, codigo: mostrarCodigo(x.codigo), numeros: JSON.parse(x.numeros) as string[] })),
   });
 });
 
 /** Vista pública: sin datos del organizador ni de los participantes. */
 rifas.get("/publica/:slug", async (c) => {
-  const r = await c.env.DB.prepare("SELECT * FROM rifas WHERE slug = ? AND estado != 'cancelada'")
+  const buscar = () => c.env.DB.prepare("SELECT * FROM rifas WHERE slug = ? AND estado != 'cancelada'")
     .bind(c.req.param("slug")).first<FilaRifa>();
-  if (!r) return c.json({ error: "No existe esa rifa" }, 404);
-  await vencerReservas(c.env.DB, r.id);
+  const previa = await buscar();
+  if (!previa) return c.json({ error: "No existe esa rifa" }, 404);
+  // Quien mira la rifa justo después de la hora de cierre dispara el cierre y el sorteo.
+  await vencerReservas(c.env.DB, previa.id);
+  await avanzarRifa(c.env.DB, previa.id);
+  const r = (await buscar())!;
+  const s = r.sorteo_id ? await resolverSorteo(c.env.DB, r.sorteo_id) : null;
   const { results: tomados } = await c.env.DB.prepare(
     `SELECT n.numero AS n, CASE s.estado WHEN 'pagada' THEN 'p' ELSE 'r' END AS e
      FROM numeros n JOIN reservas s ON s.codigo = n.reserva_codigo
@@ -115,5 +137,15 @@ rifas.get("/publica/:slug", async (c) => {
     maxPorPersona: r.max_por_persona,
     sorteoId: r.sorteo_id,
     tomados,
+    resultado: s && {
+      sorteoId: s.id,
+      estado: s.estado,
+      ronda: s.ronda,
+      momento: s.momento,
+      huella: s.huella,
+      numerosEnSorteo: s.lista.length,
+      premios: s.premios,
+      ganadores: s.ganadores.map((g) => ({ premio: g.premio, numero: g.nombre })),
+    },
   });
 });

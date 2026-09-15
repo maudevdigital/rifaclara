@@ -16,7 +16,7 @@ const fecha = (seg: number) =>
   new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "medium" }).format(seg * 1000);
 const urlRonda = s ? `https://api.drand.sh/${DRAND_QUICKNET.chainHash}/public/${s.ronda}` : "";
 const varios = (s?.ganadores.length ?? 0) > 1;
-const etiquetaTipo = s ? (s.titulo ?? ({ ruleta: "Ruleta", rifa: "Sorteo de rifa" } as Record<string, string>)[s.tipo] ?? "Sorteo de nombres") : "";
+const etiquetaTipo = s ? (s.titulo ?? ({ ruleta: "Ruleta", rifa: "Sorteo de rifa", plataforma: "Rifa" } as Record<string, string>)[s.tipo] ?? "Sorteo de nombres") : "";
 const titulo = s?.ganador
   ? varios
     ? `Ganadores: ${s.ganadores.map((g) => g.nombre).join(", ")} · Sorteo verificable | Rifa Clara`
@@ -104,11 +104,24 @@ const filas = s
 
       <section class="grid gap-3">
         <h2 class="text-xl font-semibold">Lista sorteada ({s.lista.length})</h2>
+        {s.tipo === "plataforma" && (
+          <form data-buscar-boleto class="grid gap-2 rounded-2xl border border-line bg-surface p-4" novalidate>
+            <label for="buscar-boleto" class="text-sm font-semibold">¿Estuvo tu boleto en el sorteo?</label>
+            <p class="text-xs text-muted">Cada línea es un número pagado y la huella SHA-256 de su código de boleto. Escribe tu código: se comprueba aquí mismo, sin enviarlo a ningún lado.</p>
+            <div class="flex flex-wrap gap-2">
+              <input id="buscar-boleto" name="codigo" placeholder="RC-XXXXX-XXXXX" autocomplete="off" class="min-w-0 flex-1 rounded-lg border border-line bg-bg px-3 py-2.5 font-mono text-sm uppercase focus:border-accent focus:outline-none" />
+              <button type="submit" class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink">Buscar</button>
+            </div>
+            <p data-resultado-boleto aria-live="polite" class="min-h-5 text-sm"></p>
+          </form>
+        )}
         <details class="rounded-2xl border border-line bg-surface p-4" open={s.lista.length <= 30}>
           <summary class="cursor-pointer text-sm font-semibold">Ver las {s.lista.length} líneas en el orden sorteado</summary>
           <ol class="mt-3 grid gap-1 font-mono text-sm sm:grid-cols-2">
             {s.lista.map((linea) => (
-              <li class:list={["rounded px-2 py-0.5", s.ganadores.some((g) => g.linea === linea) && "bg-pick font-semibold text-pick-ink"]}>{linea}</li>
+              <li data-linea={linea} title={linea} class:list={["truncate rounded px-2 py-0.5 outline-accent", s.ganadores.some((g) => g.linea === linea) && "bg-pick font-semibold text-pick-ink"]}>
+                {s.tipo === "plataforma" ? <>{linea.slice(0, linea.indexOf(":"))} <span class="opacity-60">· {linea.slice(linea.indexOf(":") + 1, linea.indexOf(":") + 13)}…</span></> : linea}
+              </li>
             ))}
           </ol>
         </details>

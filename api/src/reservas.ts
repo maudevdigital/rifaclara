@@ -4,6 +4,9 @@ import type { Entorno } from "./auth";
 import { requiereUsuario } from "./auth";
 import { eventoRifa } from "./eventos";
 import { generarId } from "./lista";
+import { sha256 } from "@rifaclara/shared";
+import { avanzarRifa } from "./cierre";
+import { resolverSorteo } from "./sorteos";
 
 const ahora = () => Math.floor(Date.now() / 1000);
 
@@ -113,20 +116,37 @@ reservas.get("/:codigo", async (c) => {
      FROM reservas s JOIN rifas r ON r.id = s.rifa_id WHERE s.codigo = ?`,
   ).bind(codigo).first<Record<string, string | number | null>>();
   if (!fila) return c.json({ error: "No existe ese boleto." }, 404);
-  await vencerReservas(c.env.DB, String(fila.rifa_id));
-  const estado = fila.estado === "pendiente" && Number(fila.vence_en) < ahora() ? "vencida" : fila.estado;
+  const rifaId = String(fila.rifa_id);
+  await vencerReservas(c.env.DB, rifaId);
+  await avanzarRifa(c.env.DB, rifaId);
+  const rifa = (await c.env.DB.prepare("SELECT estado, sorteo_id FROM rifas WHERE id = ?").bind(rifaId).first<{ estado: string; sorteo_id: string | null }>())!;
+  const reserva = (await c.env.DB.prepare("SELECT estado FROM reservas WHERE codigo = ?").bind(codigo).first<{ estado: string }>())!;
+  const estado = reserva.estado === "pendiente" && Number(fila.vence_en) < ahora() ? "vencida" : reserva.estado;
+  const numeros = JSON.parse(String(fila.numeros)) as string[];
+
+  // Resultado para esta persona: si sus números estuvieron en la lista sellada y si ganó.
+  const huella = await sha256(mostrarCodigo(codigo));
+  const s = rifa.sorteo_id ? await resolverSorteo(c.env.DB, rifa.sorteo_id) : null;
+  const resultado = s && {
+    sorteoId: s.id,
+    estado: s.estado,
+    huellaBoleto: huella,
+    enLista: numeros.filter((n) => s.lista.includes(`${n}:${huella}`)),
+    ganados: s.ganadores.filter((g) => numeros.includes(g.nombre) && s.lista.includes(`${g.nombre}:${huella}`)).map((g) => ({ premio: g.premio, numero: g.nombre })),
+  };
   const telefono = String(fila.telefono);
   return c.json({
     codigo: mostrarCodigo(codigo),
     nombre: fila.nombre,
     telefono: `+${telefono.slice(0, -4).replace(/\d/g, "•")}${telefono.slice(-4)}`,
     estado,
-    numeros: JSON.parse(String(fila.numeros)) as string[],
+    numeros,
+    resultado,
     venceEn: fila.vence_en,
     pagadaEn: fila.pagada_en,
     rifa: {
       slug: fila.slug, titulo: fila.titulo, premios: JSON.parse(String(fila.premios)), precio: fila.precio,
-      cierreEn: fila.cierre_en, zonaHoraria: fila.zona_horaria, mediosPago: fila.medios_pago, whatsapp: fila.whatsapp, estado: fila.estado_rifa,
+      cierreEn: fila.cierre_en, zonaHoraria: fila.zona_horaria, mediosPago: fila.medios_pago, whatsapp: fila.whatsapp, estado: rifa.estado,
     },
   });
 });

@@ -1,0 +1,132 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { apiServidor } from "../../../lib/api-servidor";
+import { fechaChile } from "../../../lib/formato";
+
+export const prerender = false;
+
+interface Rifa {
+  slug: string; titulo: string; premios: string[]; cierreEn: number; zonaHoraria: string; estado: string;
+}
+const { estado, datos: r } = await apiServidor<Rifa>(Astro.request, `/api/rifas/publica/${encodeURIComponent(Astro.params.slug ?? "")}`);
+if (!r) Astro.response.status = estado === 404 ? 404 : 502;
+const titulo = r ? (/^rifa\b/i.test(r.titulo) ? r.titulo : `Rifa ${r.titulo}`) : "";
+---
+<Base title={r ? `Sorteo en vivo · ${titulo} | Rifa Clara` : "Rifa no encontrada | Rifa Clara"} description="Sorteo verificable en vivo." noindex>
+  {!r && <section class="py-16"><h1 class="text-4xl font-semibold">No encontramos esta rifa</h1></section>}
+  {r && (
+    <section class="grid gap-4 py-4">
+      <a href={`/r/${r.slug}`} class="text-sm text-muted hover:text-ink">← {titulo}</a>
+      <div data-vivo data-slug={r.slug} data-cierre={r.cierreEn} data-premios={JSON.stringify(r.premios)}
+        class="escenario grid content-center justify-items-center gap-6 rounded-2xl border border-line bg-surface p-6 text-center sm:p-10">
+        <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">{titulo}</span>
+        <span data-etiqueta class="text-lg font-semibold">Sorteo en vivo</span>
+        <span data-grande class="numero font-mono font-semibold text-accent tabular-nums">···</span>
+        <span data-sub class="min-h-6 max-w-[56ch] text-muted">El sorteo es el {fechaChile(r.cierreEn, r.zonaHoraria)}.</span>
+        <ol data-ganadores class="grid w-full max-w-3xl gap-2 sm:grid-cols-2"></ol>
+        <p data-sello class="max-w-[62ch] font-mono text-xs break-words text-muted"></p>
+        <div class="flex flex-wrap justify-center gap-2">
+          <button data-pantalla type="button" class="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Pantalla completa</button>
+          <a data-comprobante hidden class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">Ver comprobante</a>
+        </div>
+      </div>
+      <p class="text-xs text-muted">Esta página se actualiza sola. Déjala abierta: al llegar la hora se sella la lista de números pagados, se espera la ronda de drand y los ganadores aparecen uno por uno.</p>
+    </section>
+  )}
+</Base>
+
+<style>
+  .numero { font-size: clamp(4.5rem, 16vw, 10rem); line-height: 1; }
+  .escenario { min-height: 60vh; }
+  .escenario:fullscreen { background: var(--bg); border: 0; border-radius: 0; min-height: 100vh; }
+  .escenario:fullscreen .numero { font-size: min(30vh, 24vw); }
+</style>
+
+<script>
+  import type { SorteoPublico } from "@rifaclara/shared";
+  import { comprobarLocal, esperarResultado, nombrePremio } from "../../../lib/sorteo-remoto";
+
+  const raiz = document.querySelector<HTMLElement>("[data-vivo]");
+  if (raiz) {
+    const slug = raiz.dataset.slug!;
+    const cierre = Number(raiz.dataset.cierre);
+    const premios = JSON.parse(raiz.dataset.premios!) as string[];
+    const $ = (s: string) => raiz.querySelector<HTMLElement>(s)!;
+    const grande = $("[data-grande]"), etiqueta = $("[data-etiqueta]"), sub = $("[data-sub]"), lista = $("[data-ganadores]"), sello = $("[data-sello]");
+    const reducir = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pausa = (ms: number) => new Promise((r) => setTimeout(r, reducir ? 0 : ms));
+    const dos = (n: number) => String(n).padStart(2, "0");
+
+    type Resultado = { sorteoId: string; estado: string; ronda: number; momento: number; huella: string; numerosEnSorteo: number };
+    const leer = async () => (await fetch(`/api/rifas/publica/${slug}`)).json() as Promise<{ estado: string; resultado: Resultado | null }>;
+
+    function agregarGanador(premio: number, numero: string) {
+      const li = document.createElement("li");
+      li.className = "flex items-center justify-between gap-3 rounded-xl border border-line bg-bg px-4 py-3 text-left";
+      const texto = document.createElement("span");
+      texto.innerHTML = `<span class="block text-xs text-muted uppercase"></span><span class="font-semibold"></span>`;
+      texto.children[0]!.textContent = nombrePremio(premio);
+      texto.children[1]!.textContent = premios[premio] ?? "";
+      const num = document.createElement("span");
+      num.className = "rounded-md bg-pick px-3 py-1 font-mono text-2xl font-semibold text-pick-ink";
+      num.textContent = numero;
+      li.append(texto, num);
+      lista.append(li);
+    }
+
+    async function revelar(s: SorteoPublico, animar: boolean) {
+      const numeros = s.lista.map((l) => l.slice(0, l.indexOf(":")));
+      for (const g of s.ganadores) {
+        etiqueta.textContent = nombrePremio(g.premio);
+        if (animar && !reducir) {
+          const fin = Date.now() + 2200;
+          while (Date.now() < fin) { grande.textContent = numeros[Math.floor(Math.random() * numeros.length)]!; await pausa(70); }
+        }
+        grande.textContent = g.nombre;
+        sub.textContent = premios[g.premio] ? `Gana ${premios[g.premio]}` : "";
+        agregarGanador(g.premio, g.nombre);
+        if (animar) await pausa(1100);
+      }
+      etiqueta.textContent = s.ganadores.length > 1 ? "Sorteo terminado" : "Número ganador";
+      if (s.ganadores.length > 1) { grande.textContent = "✓"; sub.textContent = `${s.ganadores.length} premios sorteados`; }
+      const enlace = $("[data-comprobante]") as HTMLAnchorElement;
+      enlace.href = `/sorteo/${s.id}`; enlace.hidden = false;
+    }
+
+    async function seguir() {
+      // 1. Cuenta regresiva hasta el cierre.
+      while (Date.now() / 1000 < cierre) {
+        const falta = Math.max(0, Math.round(cierre - Date.now() / 1000));
+        const d = Math.floor(falta / 86400), h = Math.floor((falta % 86400) / 3600), m = Math.floor((falta % 3600) / 60), sg = falta % 60;
+        etiqueta.textContent = "Faltan";
+        grande.textContent = d > 0 ? `${d}d ${dos(h)}h` : `${dos(h)}:${dos(m)}:${dos(sg)}`;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      // 2. Cierre: la API sella la lista y fija la ronda.
+      etiqueta.textContent = "Cerrando la rifa";
+      grande.textContent = "···";
+      sub.textContent = "Sellando la lista de números pagados…";
+      let datos = await leer();
+      for (let i = 0; !datos.resultado && datos.estado !== "cerrada" && i < 40; i++) { await pausa(3000); datos = await leer(); }
+      const res = datos.resultado;
+      if (!res) { etiqueta.textContent = "Sin sorteo"; grande.textContent = "—"; sub.textContent = "La rifa cerró sin números pagados."; return; }
+      sello.textContent = `Lista sellada: ${res.numerosEnSorteo} números · huella ${res.huella.slice(0, 16)}… · ronda ${res.ronda} de drand`;
+      // 3. Esperar la ronda, comprobar en el navegador y revelar.
+      const yaResuelto = res.estado === "resuelto";
+      if (!yaResuelto) { etiqueta.textContent = "Esperando el azar público"; sub.textContent = `Ronda ${res.ronda} de drand`; }
+      try {
+        const s = await esperarResultado({ id: res.sorteoId, momento: res.momento, ronda: res.ronda, huella: res.huella });
+        await comprobarLocal(s, s.lista);
+        await revelar(s, !yaResuelto);
+      } catch (e) {
+        etiqueta.textContent = "No se pudo completar";
+        sub.textContent = `${(e as Error).message}. Recarga la página en unos segundos.`;
+      }
+    }
+
+    $("[data-pantalla]").addEventListener("click", () => {
+      if (document.fullscreenElement) document.exitFullscreen(); else raiz.requestFullscreen?.();
+    });
+    seguir();
+  }
+</script>
