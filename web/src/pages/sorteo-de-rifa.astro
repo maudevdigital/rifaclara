@@ -1,0 +1,100 @@
+---
+import Base from "../layouts/Base.astro";
+import SorteoRifa from "../components/SorteoRifa.astro";
+
+const url = new URL("/sorteo-de-rifa", Astro.site).href;
+const preguntas = [
+  {
+    p: "¿Qué pasa con los números que no se vendieron?",
+    r: "Elige “Solo los vendidos” y pega los números que sí se vendieron. Así el sorteo es solo entre quienes pagaron y no puede salir un número sin dueño. Si prefieres el método tradicional de sortear entre todos y repetir cuando sale uno no vendido, usa el rango completo.",
+  },
+  {
+    p: "¿Cuántos premios puedo sortear?",
+    r: "Hasta 20 en un mismo sorteo. Los números salen en orden: el primero gana el 1er premio, el segundo el 2º premio, y un número no puede ganar dos veces.",
+  },
+  {
+    p: "¿Cómo demuestro que el sorteo fue limpio?",
+    r: "Al terminar recibes un enlace con el comprobante: la lista de números, la ronda de drand usada y el cálculo. Cualquiera que lo abra puede presionar “Verificar en mi navegador” y llegar a los mismos números ganadores sin confiar en nosotros.",
+  },
+  {
+    p: "¿Puedo hacer el sorteo en vivo?",
+    r: "Sí. Usa el botón de pantalla completa y comparte la pantalla en Instagram, Facebook o Zoom. Los números salen uno por uno, en grande, como en una tómbola.",
+  },
+  {
+    p: "¿Cuánto cuesta?",
+    r: "Nada. El sorteo de rifa es gratis y no necesitas crear una cuenta.",
+  },
+];
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Sorteo de rifa online · Rifa Clara",
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    inLanguage: "es-CL",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "CLP" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: preguntas.map(({ p, r }) => ({ "@type": "Question", name: p, acceptedAnswer: { "@type": "Answer", text: r } })),
+  },
+];
+---
+<Base
+  title="Sorteo de rifa online gratis y verificable | Rifa Clara"
+  description="Sortea los números ganadores de tu rifa: del 1 al 100 o solo los vendidos, con varios premios. Gratis, en vivo y con un enlace para que cualquiera compruebe el resultado."
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <section class="grid gap-3 pt-4 pb-6">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Sorteo de rifa</h1>
+    <p class="max-w-[62ch] text-lg text-muted">Elige los números ganadores de tu rifa en vivo, con varios premios y un comprobante que cualquiera puede verificar. Gratis y sin registro.</p>
+  </section>
+
+  <SorteoRifa />
+
+  <div class="mt-20 grid max-w-3xl gap-14">
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Cómo sortear tu rifa</h2>
+      <ol class="grid list-decimal gap-3 pl-5 text-muted marker:font-mono marker:text-accent [&_b]:text-ink">
+        <li><b>Indica los números.</b> Del 1 al 100, del 00 al 99, o pega solo los que vendiste.</li>
+        <li><b>Elige cuántos premios hay.</b> El primer número que sale se lleva el premio mayor.</li>
+        <li><b>Presiona sortear.</b> La lista queda registrada, se fija una ronda futura de drand y los números salen uno por uno.</li>
+        <li><b>Comparte el enlace</b> en el grupo de WhatsApp o en tus redes. Quien lo abra ve el resultado y puede verificarlo.</li>
+      </ol>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Un sorteo que no depende de confiar en nadie</h2>
+      <p class="leading-relaxed text-muted">
+        En una rifa, la pregunta que siempre aparece es si el sorteo fue de verdad. Con papelitos en una bolsa o una app cualquiera, la respuesta depende de creerle al organizador.
+        Aquí no: los números quedan registrados antes de que exista el azar, el azar sale de <b class="text-ink">drand</b> (un faro público de números aleatorios que emite uno nuevo cada 3 segundos) y el cálculo es público.
+      </p>
+      <p class="leading-relaxed text-muted">
+        Con el enlace del comprobante, cualquier participante puede repetir el cálculo en su celular y llegar a los mismos números ganadores. Ni el organizador ni Rifa Clara pueden elegir el resultado.
+      </p>
+      <p class="leading-relaxed text-muted">¿Solo necesitas elegir un nombre? Usa la <a class="text-accent underline" href="/ruleta">ruleta online</a>.</p>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Preguntas frecuentes</h2>
+      <div class="grid gap-2">
+        {preguntas.map(({ p, r }) => (
+          <details class="rounded-xl border border-line bg-surface px-4 py-3">
+            <summary class="cursor-pointer font-semibold marker:text-accent">{p}</summary>
+            <p class="pt-2 leading-relaxed text-muted">{r}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="grid gap-3 rounded-2xl bg-accent p-6 text-accent-ink sm:p-8">
+      <h2 class="text-2xl font-semibold">¿Todavía estás vendiendo números?</h2>
+      <p class="max-w-[56ch] opacity-90">Muy pronto podrás llevar toda tu rifa en Rifa Clara: grilla de números, reservas, control de pagos y este mismo sorteo al cierre. Gratis hasta 100 números.</p>
+      <a href="/guias/como-hacer-una-rifa" class="justify-self-start rounded-lg bg-surface px-4 py-2.5 text-sm font-semibold text-accent">Lee la guía para hacer una rifa</a>
+    </section>
+  </div>
+</Base>

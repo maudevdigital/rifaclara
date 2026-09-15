@@ -1,5 +1,5 @@
-import { azarCoincideConFirma, formatearNumero, sha256, sortear } from "@rifaclara/shared";
-import type { SorteoCreado, SorteoPublico } from "@rifaclara/shared";
+import { formatearNumero } from "@rifaclara/shared";
+import { comprobarLocal, crearSorteo, enlaceSorteo, esperarResultado } from "../lib/sorteo-remoto";
 
 // Colores de la rueda: fijos en ambos temas (la rueda es un objeto, no fondo).
 const COLORES = [
@@ -163,36 +163,6 @@ function iniciar(raiz: HTMLElement) {
     return () => { activo = false; };
   }
 
-  // ---------- sorteo verificable: el compromiso queda en la API ----------
-  async function api<T>(ruta: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(ruta, init);
-    const datos = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(datos.error ?? `la API respondió ${res.status}`);
-    return datos as T;
-  }
-
-  async function esperarResultado({ id, momento }: SorteoCreado): Promise<SorteoPublico> {
-    const falta = momento * 1000 - Date.now() + 600;
-    if (falta > 0) await new Promise((r) => setTimeout(r, falta));
-    for (let intento = 0; intento < 15; intento++) {
-      const s = await api<SorteoPublico>(`/api/sorteos/${id}`);
-      if (s.estado === "resuelto") return s;
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-    throw new Error("drand tardó más de lo normal");
-  }
-
-  // No se confía a ciegas en el servidor: el navegador rehace el cálculo.
-  async function comprobarLocal(s: SorteoPublico, lista: string[]) {
-    const ok =
-      s.azar && s.firma && s.ganador &&
-      s.lista.join("\n") === lista.join("\n") &&
-      (await sha256(lista.join("\n"))) === s.huella &&
-      (await azarCoincideConFirma({ ronda: s.ronda, azar: s.azar, firma: s.firma })) &&
-      (await sortear({ azar: s.azar, rifaId: s.id, lista, premios: 1 })).ganadores[0]!.linea === s.ganador.linea;
-    if (!ok) throw new Error("el resultado del servidor no coincide con el cálculo de tu navegador");
-  }
-
   function aleatorio(n: number) {
     const tope = Math.floor(2 ** 32 / n) * n;
     const a = new Uint32Array(1);
@@ -218,11 +188,7 @@ function iniciar(raiz: HTMLElement) {
         estado.textContent = "Registrando el sorteo…";
         // La API guarda la lista y fija una ronda futura con su propio reloj,
         // antes de que exista el azar. Así no sirve girar hasta que salga alguien.
-        const creado = await api<SorteoCreado>("/api/sorteos", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ nombres, tipo: "ruleta" }),
-        });
+        const creado = await crearSorteo({ tipo: "ruleta", nombres });
         estado.textContent = `Ronda ${creado.ronda} de drand fijada y registrada. Esperando el azar público…`;
         const detener = giroDeEspera();
         try {
@@ -251,7 +217,7 @@ function iniciar(raiz: HTMLElement) {
   }
 
   // ---------- resultado ----------
-  const enlaceDe = (p: Prueba) => new URL(`/sorteo/${p.id}`, location.origin).href;
+  const enlaceDe = (p: Prueba) => enlaceSorteo(p.id);
 
   function mostrarGanador(giro: Giro, indice: number) {
     $("[data-ganador]").textContent = giro.nombre;

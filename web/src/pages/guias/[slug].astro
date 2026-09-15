@@ -1,0 +1,81 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const guias = await getCollection("guias");
+  return guias.map((guia) => ({ params: { slug: guia.id }, props: { guia, todas: guias } }));
+}
+
+interface Props {
+  guia: CollectionEntry<"guias">;
+  todas: CollectionEntry<"guias">[];
+}
+const { guia, todas } = Astro.props;
+const { Content, headings } = await render(guia);
+const { titulo, descripcion, publicado, actualizado, herramienta } = guia.data;
+const url = new URL(`/guias/${guia.id}`, Astro.site).href;
+const fecha = (d: Date) => new Intl.DateTimeFormat("es-CL", { dateStyle: "long", timeZone: "UTC" }).format(d);
+const palabras = (guia.body ?? "").split(/\s+/).length;
+const minutos = Math.max(1, Math.round(palabras / 220));
+const otras = todas.filter((g) => g.id !== guia.id).sort((a, b) => a.data.orden - b.data.orden);
+const cta = {
+  ruleta: { href: "/ruleta", titulo: "Ruleta online", texto: "Gira y elige un ganador entre nombres, con modo verificable." },
+  "sorteo-de-rifa": { href: "/sorteo-de-rifa", titulo: "Sorteo de rifa", texto: "Sortea los números ganadores en vivo, con varios premios y un enlace que cualquiera puede verificar." },
+}[herramienta ?? "sorteo-de-rifa"];
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: titulo,
+    description: descripcion,
+    inLanguage: "es-CL",
+    datePublished: publicado.toISOString().slice(0, 10),
+    dateModified: (actualizado ?? publicado).toISOString().slice(0, 10),
+    mainEntityOfPage: url,
+    author: { "@type": "Organization", name: "Maudev", url: "https://maudev.cl" },
+    publisher: { "@type": "Organization", name: "Rifa Clara", url: Astro.site?.href },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Guías", item: new URL("/guias", Astro.site).href },
+      { "@type": "ListItem", position: 2, name: titulo, item: url },
+    ],
+  },
+];
+---
+<Base title={`${titulo} | Rifa Clara`} description={descripcion}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+  <article class="grid grid-cols-[minmax(0,1fr)] gap-10 pt-2 lg:grid-cols-[minmax(0,1fr)_260px]">
+    <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">
+      <nav class="truncate text-sm text-muted" aria-label="Migas de pan"><a class="hover:text-ink" href="/guias">Guías</a> <span aria-hidden="true">›</span> <span>{titulo}</span></nav>
+      <h1 class="max-w-[22ch] text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">{titulo}</h1>
+      <p class="text-sm text-muted">Actualizada el {fecha(actualizado ?? publicado)} · {minutos} min de lectura</p>
+      <div class="prosa"><Content /></div>
+    </div>
+    <aside class="grid content-start gap-4 lg:sticky lg:top-6">
+      {headings.filter((h) => h.depth === 2).length > 2 && (
+        <nav class="grid gap-2 rounded-2xl border border-line bg-surface p-4 text-sm" aria-label="En esta guía">
+          <span class="font-semibold">En esta guía</span>
+          {headings.filter((h) => h.depth === 2).map((h) => <a class="text-muted hover:text-accent" href={`#${h.slug}`}>{h.text}</a>)}
+        </nav>
+      )}
+      <a href={cta.href} class="grid gap-2 rounded-2xl bg-accent p-5 text-accent-ink hover:brightness-110">
+        <span class="text-xs font-semibold tracking-[.12em] uppercase opacity-80">Herramienta gratis</span>
+        <span class="font-display text-xl font-semibold">{cta.titulo}</span>
+        <span class="text-sm opacity-90">{cta.texto}</span>
+      </a>
+    </aside>
+  </article>
+  <section class="mt-16 grid gap-4 border-t border-line pt-10">
+    <h2 class="text-xl font-semibold">Otras guías</h2>
+    <ul class="grid gap-3 sm:grid-cols-2">
+      {otras.map((g) => (
+        <li><a class="block rounded-xl border border-line bg-surface p-4 font-semibold hover:border-accent hover:text-accent" href={`/guias/${g.id}`}>{g.data.titulo}</a></li>
+      ))}
+    </ul>
+  </section>
+</Base>

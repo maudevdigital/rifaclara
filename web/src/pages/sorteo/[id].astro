@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import type { SorteoPublico } from "@rifaclara/shared";
 import { DRAND_QUICKNET } from "@rifaclara/shared";
 import Base from "../../layouts/Base.astro";
+import { nombrePremio } from "../../lib/sorteo-remoto";
 
 export const prerender = false;
 
@@ -14,8 +15,12 @@ if (!s) Astro.response.status = 404;
 const fecha = (seg: number) =>
   new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "medium" }).format(seg * 1000);
 const urlRonda = s ? `https://api.drand.sh/${DRAND_QUICKNET.chainHash}/public/${s.ronda}` : "";
+const varios = (s?.ganadores.length ?? 0) > 1;
+const etiquetaTipo = s ? (s.titulo ?? ({ ruleta: "Ruleta", rifa: "Sorteo de rifa" } as Record<string, string>)[s.tipo] ?? "Sorteo de nombres") : "";
 const titulo = s?.ganador
-  ? `Ganó ${s.ganador.nombre} · Sorteo verificable | Rifa Clara`
+  ? varios
+    ? `Ganadores: ${s.ganadores.map((g) => g.nombre).join(", ")} · Sorteo verificable | Rifa Clara`
+    : `Ganó ${s.ganador.nombre} · Sorteo verificable | Rifa Clara`
   : s ? "Sorteo verificable en curso | Rifa Clara" : "Sorteo no encontrado | Rifa Clara";
 const descripcion = s
   ? `Sorteo entre ${s.lista.length} participantes con la ronda ${s.ronda} de drand. Cualquiera puede comprobar el resultado.`
@@ -26,6 +31,7 @@ const filas = s
       ["Ronda de drand", String(s.ronda)],
       ["Emitida", fecha(s.momento)],
       ["Participantes", String(s.lista.length)],
+      ["Premios", String(s.premios)],
       ["Huella de la lista", s.huella],
       ["Azar", s.azar ?? "todavía no existe"],
       ["Firma de drand", s.firma ?? "todavía no existe"],
@@ -45,15 +51,29 @@ const filas = s
     <div class="grid gap-10 py-6">
       <section class="grid justify-items-start gap-4">
         <span class="inline-flex items-center gap-2 rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
-          <i class="size-1.5 rounded-full bg-ok"></i>Sorteo verificable · {s.titulo ?? (s.tipo === "ruleta" ? "Ruleta" : "Sorteo de nombres")}
+          <i class="size-1.5 rounded-full bg-ok"></i>Sorteo verificable · {etiquetaTipo}
         </span>
-        {s.ganador ? (
+        {s.ganador && varios && (
+          <>
+            <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">{s.tipo === "rifa" ? "Números ganadores" : "Ganadores"}</h1>
+            <ol class="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {s.ganadores.map((g) => (
+                <li class="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+                  <span class="text-sm text-muted">{nombrePremio(g.premio)}</span>
+                  <span class="rounded-md bg-pick px-2.5 py-1 font-mono text-xl font-semibold break-all text-pick-ink">{g.nombre}</span>
+                </li>
+              ))}
+            </ol>
+            <p class="text-muted">{s.premios} premios entre {s.lista.length} participantes, sorteados con la ronda {s.ronda} de drand.</p>
+          </>
+        )}
+        {s.ganador && !varios ? (
           <>
             <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Ganó</span>
             <h1 class="text-5xl font-semibold tracking-tight break-words text-accent sm:text-6xl">{s.ganador.nombre}</h1>
             <p class="text-muted">Línea <code class="font-mono text-ink">{s.ganador.linea}</code> de {s.lista.length}, sorteada con la ronda {s.ronda} de drand.</p>
           </>
-        ) : (
+        ) : !s.ganador && (
           <>
             <h1 class="text-4xl font-semibold">Esperando la ronda {s.ronda} de drand…</h1>
             <p data-pendiente data-id={s.id} class="text-muted">El resultado aparece solo en unos segundos.</p>
@@ -88,7 +108,7 @@ const filas = s
           <summary class="cursor-pointer text-sm font-semibold">Ver las {s.lista.length} líneas en el orden sorteado</summary>
           <ol class="mt-3 grid gap-1 font-mono text-sm sm:grid-cols-2">
             {s.lista.map((linea) => (
-              <li class:list={["rounded px-2 py-0.5", linea === s.ganador?.linea && "bg-pick font-semibold text-pick-ink"]}>{linea}</li>
+              <li class:list={["rounded px-2 py-0.5", s.ganadores.some((g) => g.linea === linea) && "bg-pick font-semibold text-pick-ink"]}>{linea}</li>
             ))}
           </ol>
         </details>
@@ -97,7 +117,8 @@ const filas = s
       <section class="grid max-w-3xl gap-3 text-muted">
         <h2 class="text-xl font-semibold text-ink">Cómo se calcula</h2>
         <p>La lista y su huella quedaron registradas antes de que existiera la ronda {s.ronda} de drand, que se emite cada 3 segundos y nadie conoce de antemano. El ganador sale de:</p>
-        <code class="rounded-lg bg-salvia px-3 py-2 font-mono text-sm break-all text-ink">sha256(azar:{s.id}:huella:0) mod {s.lista.length}</code>
+        <code class="rounded-lg bg-salvia px-3 py-2 font-mono text-sm break-all text-ink">sha256(azar:{s.id}:huella:premio) mod {s.lista.length}</code>
+        {varios && <p>Para cada premio se repite el cálculo con su número (0, 1, 2…), quitando antes de la lista a los que ya ganaron.</p>}
         <p>El botón de verificar lee el azar directo desde drand, sin pasar por Rifa Clara, y repite cada paso en tu navegador.</p>
       </section>
 

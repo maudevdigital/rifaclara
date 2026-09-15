@@ -170,6 +170,7 @@ Workspaces con `web`, `api` y `shared`; CI y previews; `rifaclara.maudev.cl` apu
 Listo cuando: los dos Workers se despliegan solos desde GitHub.
 
 **Fase 1 · Herramientas y contenido, solo Chile (semanas 2–3)**
+Estado (15 sep): publicados la ruleta, el sorteo de rifa con varios premios, el comprobante /sorteo/:id y 3 guías. Faltan: generador de números, talonario PDF, 3 guías más, Search Console y Web Analytics.
 Ruleta online, sorteo de nombres compartible y verificable, generador de números y 6 guías. Legales, sitemap, Search Console y Web Analytics.
 Listo cuando: las páginas están indexadas en Google Chile y un sorteo de nombres se comparte y se verifica con un enlace.
 

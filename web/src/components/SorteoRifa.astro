@@ -1,0 +1,106 @@
+---
+// Herramienta de sorteo de rifa. La lógica vive en src/scripts/sorteo-rifa.ts.
+const campo = "w-full rounded-lg border border-line bg-bg px-3 py-2.5 font-mono text-sm text-ink focus:border-accent focus:outline-none";
+const boton = "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium hover:border-accent hover:text-accent";
+---
+<div data-sorteo-rifa class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+  <div data-escenario class="escenario grid content-start gap-5 rounded-2xl border border-line bg-surface p-5 sm:p-8">
+    <div class="grid justify-items-center gap-2 rounded-2xl bg-bg px-4 py-10 text-center sm:py-14">
+      <span data-etiqueta class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Listo para sortear</span>
+      <span data-pantalla-numero class="numero font-mono font-semibold text-accent tabular-nums" aria-live="polite">···</span>
+      <span data-subtitulo class="min-h-6 text-muted">Configura la rifa y presiona sortear.</span>
+    </div>
+
+    <ol data-resultados class="grid gap-2 sm:grid-cols-2" aria-label="Números ganadores"></ol>
+
+    <div data-compartir hidden class="grid gap-2 rounded-xl bg-ok-soft px-4 py-3">
+      <span class="text-sm font-semibold text-ok">✓ Sorteo verificable registrado</span>
+      <span data-compartir-detalle class="font-mono text-xs break-words"></span>
+      <span class="flex flex-wrap gap-4">
+        <button data-copiar type="button" class="text-sm font-semibold text-accent underline underline-offset-2">Copiar enlace</button>
+        <a data-enlace href="/sorteo-de-rifa" target="_blank" class="text-sm font-semibold text-accent underline underline-offset-2">Ver comprobante</a>
+      </span>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-2">
+      <button data-sortear type="button" class="rounded-xl bg-accent px-8 py-3.5 font-semibold text-accent-ink hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">Sortear</button>
+      <button data-pantalla type="button" class={boton}>Pantalla completa</button>
+    </div>
+    <p data-estado aria-live="polite" class="min-h-5 text-center text-sm text-muted"></p>
+  </div>
+
+  <div class="grid gap-4">
+    <div class="grid gap-2 rounded-2xl border border-line bg-surface p-4">
+      <label for="rifa-titulo" class="font-semibold">Nombre de la rifa <span class="font-normal text-muted">(opcional)</span></label>
+      <input id="rifa-titulo" data-titulo type="text" maxlength="80" placeholder="Rifa a beneficio del 3º medio" class={campo} />
+    </div>
+
+    <fieldset class="grid gap-3 rounded-2xl border border-line bg-surface p-4">
+      <legend class="sr-only">Números que participan</legend>
+      <div class="flex items-baseline justify-between">
+        <span class="font-semibold">Números que participan</span>
+        <span data-cuenta class="font-mono text-sm text-muted">100</span>
+      </div>
+      <div class="grid grid-cols-2 rounded-lg border border-line p-1 text-sm font-semibold" role="radiogroup" aria-label="Cómo indicar los números">
+        <label class="modo"><input type="radio" id="rifa-modo-rango" name="rifa-modo" value="rango" checked class="sr-only" />Del … al …</label>
+        <label class="modo"><input type="radio" id="rifa-modo-vendidos" name="rifa-modo" value="vendidos" class="sr-only" />Solo los vendidos</label>
+      </div>
+      <div data-panel-rango class="grid grid-cols-2 gap-3">
+        <label class="grid gap-1 text-sm" for="rifa-desde">Desde<input id="rifa-desde" data-desde type="number" inputmode="numeric" min="0" max="99999" value="1" class={campo} /></label>
+        <label class="grid gap-1 text-sm" for="rifa-hasta">Hasta<input id="rifa-hasta" data-hasta type="number" inputmode="numeric" min="1" max="99999" value="100" class={campo} /></label>
+      </div>
+      <div data-panel-vendidos hidden class="grid gap-1">
+        <label for="rifa-vendidos" class="text-sm">Pega los números vendidos, separados por coma, espacio o línea</label>
+        <textarea id="rifa-vendidos" data-vendidos rows="5" spellcheck="false" placeholder="3, 7, 12, 25, 47, 88" class={campo}></textarea>
+      </div>
+      <p data-error-numeros class="text-sm text-danger" hidden></p>
+    </fieldset>
+
+    <div class="grid gap-2 rounded-2xl border border-line bg-surface p-4">
+      <label for="rifa-premios" class="font-semibold">Cantidad de premios</label>
+      <input id="rifa-premios" data-premios type="number" inputmode="numeric" min="1" max="20" value="3" class={campo} />
+      <p class="text-xs leading-relaxed text-muted">El primer número que sale gana el 1er premio, el segundo el 2º, y así. Un número no puede ganar dos veces.</p>
+    </div>
+
+    <p class="text-xs leading-relaxed text-muted">
+      Cada sorteo queda registrado 90 días con su ronda de drand, para que cualquiera con el enlace compruebe el resultado.
+    </p>
+  </div>
+</div>
+
+<style>
+  .numero {
+    font-size: clamp(4.5rem, 14vw, 9rem);
+    line-height: 1;
+  }
+  .modo {
+    display: grid;
+    place-items: center;
+    padding-block: 0.5rem;
+    border-radius: 0.4rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .modo:has(input:checked) {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .modo:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .escenario:fullscreen {
+    align-content: center;
+    background: var(--bg);
+    border: 0;
+    border-radius: 0;
+    padding: 4vh 6vw;
+  }
+  .escenario:fullscreen .numero {
+    font-size: min(28vh, 22vw);
+  }
+</style>
+
+<script>
+  import "../scripts/sorteo-rifa.ts";
+</script>

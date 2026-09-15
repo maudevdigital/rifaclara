@@ -40,10 +40,10 @@ if (boton && pasos && datos) {
       paso(`Azar de la ronda ${s.ronda} leído desde api.drand.sh y drand.cloudflare.com, y comprobado contra su firma`, true);
       if (!paso("El azar de drand es el mismo que muestra este comprobante", r.azar === s.azar)) return;
 
-      const { ganadores } = await sortear({ azar: r.azar, rifaId: s.id, lista: s.lista, premios: 1 });
-      const linea = ganadores[0]!.linea;
-      paso(`sha256(azar:${s.id}:huella:0) mod ${s.lista.length} → ${linea}`, true);
-      paso(linea === s.ganador?.linea ? "El ganador es correcto" : "El ganador NO coincide", linea === s.ganador?.linea);
+      const { ganadores } = await sortear({ azar: r.azar, rifaId: s.id, lista: s.lista, premios: s.premios });
+      for (const g of ganadores) paso(`Premio ${g.premio + 1}: sha256(azar:${s.id}:huella:${g.premio}) mod ${s.lista.length - g.premio} → ${g.linea}`, true);
+      const ok = ganadores.map((g) => g.linea).join("\n") === s.ganadores.map((g) => g.linea).join("\n");
+      paso(ok ? (s.premios > 1 ? "Todos los ganadores son correctos" : "El ganador es correcto") : "Los ganadores NO coinciden", ok);
     } catch (e) {
       paso(`No se pudo verificar: ${(e as Error).message}`, false);
     } finally {

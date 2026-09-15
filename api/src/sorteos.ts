@@ -10,9 +10,11 @@ interface Fila {
   lista: string;
   huella: string;
   ronda: number;
+  premios: number;
   azar: string | null;
   firma: string | null;
   ganador: string | null;
+  ganadores: string | null;
   creado_en: number;
   resuelto_en: number | null;
 }
@@ -21,6 +23,9 @@ const ahora = () => Math.floor(Date.now() / 1000);
 
 function publico(f: Fila): SorteoPublico {
   const lista: string[] = JSON.parse(f.lista);
+  // Los sorteos anteriores a la migración 0002 solo tienen `ganador`.
+  const lineas: string[] = f.ganadores ? JSON.parse(f.ganadores) : f.ganador ? [f.ganador] : [];
+  const ganadores = lineas.map((linea, premio) => ({ premio, linea, indice: lista.indexOf(linea), nombre: nombreDe(linea, f.tipo) }));
   return {
     id: f.id,
     tipo: f.tipo,
@@ -29,10 +34,12 @@ function publico(f: Fila): SorteoPublico {
     huella: f.huella,
     ronda: f.ronda,
     momento: momentoRonda(f.ronda),
+    premios: f.premios,
     estado: f.azar ? "resuelto" : "pendiente",
     azar: f.azar,
     firma: f.firma,
-    ganador: f.ganador ? { linea: f.ganador, indice: lista.indexOf(f.ganador), nombre: nombreDe(f.ganador) } : null,
+    ganador: ganadores[0] ?? null,
+    ganadores,
     creadoEn: f.creado_en,
     resueltoEn: f.resuelto_en,
   };
@@ -46,14 +53,14 @@ async function resolver(db: D1Database, f: Fila): Promise<Fila> {
   if (f.azar || ahora() < momentoRonda(f.ronda)) return f;
   try {
     const r = await leerRonda(f.ronda, { intentos: 1, esperar: async () => {} });
-    const { ganadores } = await sortear({ azar: r.azar, rifaId: f.id, lista: JSON.parse(f.lista), premios: 1 });
-    const ganador = ganadores[0]!.linea;
+    const res = await sortear({ azar: r.azar, rifaId: f.id, lista: JSON.parse(f.lista), premios: f.premios });
+    const lineas = res.ganadores.map((g) => g.linea);
     const resuelto = ahora();
     await db
-      .prepare("UPDATE sorteos SET azar = ?, firma = ?, ganador = ?, resuelto_en = ? WHERE id = ? AND azar IS NULL")
-      .bind(r.azar, r.firma, ganador, resuelto, f.id)
+      .prepare("UPDATE sorteos SET azar = ?, firma = ?, ganador = ?, ganadores = ?, resuelto_en = ? WHERE id = ? AND azar IS NULL")
+      .bind(r.azar, r.firma, lineas[0], JSON.stringify(lineas), resuelto, f.id)
       .run();
-    return { ...f, azar: r.azar, firma: r.firma, ganador, resuelto_en: resuelto };
+    return { ...f, azar: r.azar, firma: r.firma, ganador: lineas[0]!, ganadores: JSON.stringify(lineas), resuelto_en: resuelto };
   } catch (e) {
     if (e instanceof RondaNoDisponible) return f;
     throw e;
@@ -71,15 +78,16 @@ sorteos.post("/", async (c) => {
   const datos = esquemaNuevoSorteo.safeParse(cuerpo);
   if (!datos.success) return c.json({ error: datos.error.issues[0]?.message ?? "Datos inválidos" }, 400);
 
-  const lista = lineasDe(datos.data.nombres);
+  const { tipo, premios, titulo } = datos.data;
+  const lista = lineasDe(datos.data);
   const huella = await sha256(lista.join("\n"));
   // La ronda se fija con el reloj del servidor y es siempre futura.
   const ronda = rondaDrand(Date.now() / 1000) + 1;
   const id = generarId();
   await c.env.DB.prepare(
-    "INSERT INTO sorteos (id, tipo, titulo, lista, huella, ronda, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO sorteos (id, tipo, titulo, lista, huella, ronda, premios, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
   )
-    .bind(id, datos.data.tipo, datos.data.titulo || null, JSON.stringify(lista), huella, ronda, ahora())
+    .bind(id, tipo, titulo || null, JSON.stringify(lista), huella, ronda, premios, ahora())
     .run();
   return c.json({ id, huella, ronda, momento: momentoRonda(ronda) } satisfies SorteoCreado, 201);
 });

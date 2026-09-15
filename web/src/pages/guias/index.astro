@@ -1,0 +1,26 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+const guias = (await getCollection("guias")).sort((a, b) => a.data.orden - b.data.orden);
+---
+<Base
+  title="Guías para organizar una rifa en Chile | Rifa Clara"
+  description="Guías prácticas para hacer una rifa: cuánto cobrar por número, cómo vender, controlar pagos y sortear de forma transparente."
+>
+  <section class="grid gap-3 pt-4 pb-10">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Guías para organizar una rifa</h1>
+    <p class="max-w-[60ch] text-lg text-muted">Todo lo que conviene saber antes de vender el primer número, escrito para rifas en Chile.</p>
+  </section>
+  <ul class="grid gap-4 md:grid-cols-3">
+    {guias.map((g) => (
+      <li class="grid">
+        <a href={`/guias/${g.id}`} class="grid content-start gap-3 rounded-2xl border border-line bg-surface p-5 hover:border-accent">
+          <h2 class="text-lg leading-snug font-semibold">{g.data.titulo}</h2>
+          <p class="text-sm leading-relaxed text-muted">{g.data.descripcion}</p>
+          <span class="text-sm font-semibold text-accent">Leer guía →</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Base>

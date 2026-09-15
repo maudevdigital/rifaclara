@@ -2,25 +2,46 @@ import { z } from "zod";
 import { formatearNumero } from "@rifaclara/shared";
 
 export const MAX_NOMBRES = 500;
+export const MAX_NUMEROS = 10000;
+export const MAX_PREMIOS = 20;
 export const MAX_LARGO = 80;
 
-export const esquemaNuevoSorteo = z.object({
-  nombres: z
-    .array(z.string().trim().min(1, "Hay una línea vacía").max(MAX_LARGO, `Cada nombre puede tener hasta ${MAX_LARGO} caracteres`))
-    .min(2, "Se necesitan al menos dos nombres")
-    .max(MAX_NOMBRES, `Se aceptan hasta ${MAX_NOMBRES} nombres`),
-  titulo: z.string().trim().max(MAX_LARGO).optional(),
-  tipo: z.enum(["ruleta", "nombres"]).default("ruleta"),
-});
+const nombre = z.string().trim().min(1, "Hay una línea vacía").max(MAX_LARGO, `Cada nombre puede tener hasta ${MAX_LARGO} caracteres`);
 
-/** Líneas públicas en el orden recibido: "0:Camila", "1:Benjamín"… */
-export function lineasDe(nombres: string[]): string[] {
-  return nombres.map((nombre, i) => `${formatearNumero(i, nombres.length)}:${nombre}`);
+export const esquemaNuevoSorteo = z
+  .object({
+    tipo: z.enum(["ruleta", "nombres", "rifa"]).default("ruleta"),
+    nombres: z.array(nombre).min(2, "Se necesitan al menos dos participantes").max(MAX_NUMEROS),
+    premios: z.number().int().min(1, "Debe haber al menos un premio").max(MAX_PREMIOS, `Se sortean hasta ${MAX_PREMIOS} premios`).default(1),
+    titulo: z.string().trim().max(MAX_LARGO).optional(),
+  })
+  .superRefine((d, ctx) => {
+    if (d.tipo !== "rifa" && d.nombres.length > MAX_NOMBRES) {
+      ctx.addIssue({ code: "custom", message: `Se aceptan hasta ${MAX_NOMBRES} nombres` });
+    }
+    if (d.tipo === "rifa") {
+      if (d.nombres.some((n) => !/^\d{1,5}$/.test(n))) ctx.addIssue({ code: "custom", message: "En una rifa cada línea debe ser un número" });
+      if (new Set(d.nombres).size !== d.nombres.length) ctx.addIssue({ code: "custom", message: "Hay números repetidos" });
+    }
+    if (d.premios >= d.nombres.length) {
+      ctx.addIssue({ code: "custom", message: "Tiene que haber más participantes que premios" });
+    }
+  });
+
+export type NuevoSorteo = z.infer<typeof esquemaNuevoSorteo>;
+
+/**
+ * Líneas públicas en el orden recibido. En una rifa cada línea es el número
+ * ("047"); en ruleta y nombres se numeran para admitir repetidos ("0:Camila").
+ */
+export function lineasDe({ tipo, nombres }: Pick<NuevoSorteo, "tipo" | "nombres">): string[] {
+  if (tipo === "rifa") return nombres;
+  return nombres.map((n, i) => `${formatearNumero(i, nombres.length)}:${n}`);
 }
 
-/** Nombre de una línea "07:Camila" → "Camila". */
-export function nombreDe(linea: string): string {
-  return linea.slice(linea.indexOf(":") + 1);
+/** Lo que se muestra de una línea: "07:Camila" → "Camila"; en rifas, el número. */
+export function nombreDe(linea: string, tipo = "ruleta"): string {
+  return tipo === "rifa" ? linea : linea.slice(linea.indexOf(":") + 1);
 }
 
 // Sin 0/o, 1/l/i para que el id se pueda dictar sin confusiones.

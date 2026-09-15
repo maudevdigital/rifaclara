@@ -85,3 +85,32 @@
     transition: none !important;
   }
 }
+
+/* Texto largo de las guías. */
+.prosa {
+  max-width: 68ch;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.prosa > * + * { margin-top: 1.1em; }
+.prosa h2 { margin-top: 2.2em; font-size: 1.6rem; line-height: 1.25; font-weight: 600; }
+.prosa h3 { margin-top: 1.8em; font-size: 1.2rem; line-height: 1.3; font-weight: 600; }
+.prosa h2 + *, .prosa h3 + * { margin-top: 0.6em; }
+.prosa p, .prosa li { color: color-mix(in oklab, var(--ink) 82%, var(--muted)); }
+.prosa strong { color: var(--ink); font-weight: 600; }
+.prosa a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.prosa ul, .prosa ol { padding-left: 1.4em; }
+.prosa ul { list-style: disc; }
+.prosa ol { list-style: decimal; }
+.prosa li + li { margin-top: 0.4em; }
+.prosa li::marker { color: var(--accent); }
+.prosa code { font-family: var(--font-mono); font-size: 0.9em; background: var(--salvia); padding: 0.1em 0.35em; border-radius: 0.3em; }
+.prosa blockquote { border-left: 3px solid var(--pick); padding: 0.2em 0 0.2em 1em; }
+.prosa table { width: 100%; border-collapse: collapse; font-size: 0.95rem; display: block; overflow-x: auto; }
+.prosa th, .prosa td { border-bottom: 1px solid var(--line); padding: 0.55em 0.8em; text-align: left; white-space: nowrap; }
+.prosa th { font-weight: 600; color: var(--ink); background: var(--salvia); white-space: normal; vertical-align: bottom; }
+@media (max-width: 480px) { .prosa th, .prosa td { padding: 0.5em 0.55em; } }
+.prosa td { font-variant-numeric: tabular-nums; }
+.prosa li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.3em; }
+.prosa input[type="checkbox"] { accent-color: var(--accent); margin-right: 0.5em; }
