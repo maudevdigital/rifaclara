@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import ListaEspera from "../components/ListaEspera.astro";
 
 // Tarjeta de ejemplo: muestra cómo se verá una rifa. Datos inventados.
 const vendidos = new Set([1, 2, 4, 5, 8, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 26, 27, 29, 30, 31, 33, 34, 36, 37, 39, 40, 42, 43, 45, 46, 48, 49]);
@@ -62,10 +63,11 @@ const clases: Record<string, string> = {
     </figure>
   </section>
 
-  <section class="grid gap-4 border-t border-line py-10 sm:grid-cols-3">
-    <h2 class="text-2xl font-semibold sm:col-span-3">Ya puedes usar</h2>
+  <section class="grid gap-4 border-t border-line py-10 sm:grid-cols-2 lg:grid-cols-4">
+    <h2 class="text-2xl font-semibold sm:col-span-2 lg:col-span-4">Ya puedes usar</h2>
     <a href="/sorteo-de-rifa" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Sorteo de rifa</b><span class="text-sm text-muted">Números ganadores en vivo, con varios premios y comprobante verificable.</span></a>
     <a href="/ruleta" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Ruleta online</b><span class="text-sm text-muted">Elige un ganador entre nombres, rápido o verificable.</span></a>
+    <a href="/plantilla-de-rifa" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Plantilla de rifa</b><span class="text-sm text-muted">Talonario en PDF con colilla y QR, listo para imprimir.</span></a>
     <a href="/guias" class="grid gap-1.5 rounded-2xl border border-line bg-surface p-5 hover:border-accent"><b class="font-display text-lg">Guías</b><span class="text-sm text-muted">Cómo hacer tu rifa, cuánto cobrar y cómo sortear.</span></a>
   </section>
 
@@ -84,4 +86,5 @@ const clases: Record<string, string> = {
       <p class="text-sm leading-relaxed text-muted">Sin comisión por venta. Los participantes te transfieren a tu cuenta y tú marcas quién pagó.</p>
     </div>
   </section>
+  <div class="mt-10"><ListaEspera origen="portada" /></div>
 </Base>

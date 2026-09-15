@@ -88,6 +88,8 @@
 
 /* Texto largo de las guías. */
 .prosa {
+  /* min-width: 0 deja que las tablas anchas se desplacen dentro del texto. */
+  min-width: 0;
   max-width: 68ch;
   font-size: 1.0625rem;
   line-height: 1.75;

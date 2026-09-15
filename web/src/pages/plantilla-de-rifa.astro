@@ -1,0 +1,95 @@
+---
+import Base from "../layouts/Base.astro";
+import Plantilla from "../components/Plantilla.astro";
+import ListaEspera from "../components/ListaEspera.astro";
+
+const url = new URL("/plantilla-de-rifa", Astro.site).href;
+const preguntas = [
+  {
+    p: "¿Puedo editar la plantilla?",
+    r: "Sí: escribe el nombre de la rifa, los premios, el valor, la fecha y tus datos de pago, y el PDF sale con todo eso en cada boleto. No necesitas Word ni Canva.",
+  },
+  {
+    p: "¿Cuántos boletos caben por hoja?",
+    r: "Ocho en tamaño carta o A4, y diez en oficio. Una rifa de 100 números ocupa 13 hojas carta.",
+  },
+  {
+    p: "¿Para qué sirve la colilla?",
+    r: "La colilla queda contigo con el número, el nombre y el teléfono de quien compró, y una casilla para marcar si pagó. El boleto se entrega al comprador.",
+  },
+  {
+    p: "¿Qué pongo en el código QR?",
+    r: "Un enlace útil para quien compra: tu WhatsApp (https://wa.me/569…) para enviar el comprobante de pago, o el Instagram donde transmitirás el sorteo.",
+  },
+  {
+    p: "¿Se guardan mis datos?",
+    r: "No. El PDF se arma en tu navegador y los datos no se envían a ningún servidor.",
+  },
+];
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Plantilla de rifa para imprimir · Rifa Clara",
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    inLanguage: "es-CL",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "CLP" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: preguntas.map(({ p, r }) => ({ "@type": "Question", name: p, acceptedAnswer: { "@type": "Answer", text: r } })),
+  },
+];
+---
+<Base
+  title="Plantilla de rifa para imprimir gratis (PDF) | Rifa Clara"
+  description="Crea el talonario de tu rifa en PDF: 100 números con colilla, premio, valor, fecha y QR. Editable, gratis y listo para imprimir en carta u oficio."
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <section class="grid gap-3 pt-4 pb-6">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Plantilla de rifa para imprimir</h1>
+    <p class="max-w-[62ch] text-lg text-muted">Llena los datos de tu rifa y descarga el talonario en PDF: cada boleto con su número, su colilla y, si quieres, un código QR. Gratis y sin registro.</p>
+  </section>
+
+  <Plantilla />
+
+  <div class="mt-20 grid max-w-3xl gap-14">
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Qué trae cada boleto</h2>
+      <ul class="grid list-disc gap-3 pl-5 text-muted marker:text-accent [&_b]:text-ink">
+        <li><b>Colilla</b> con el número, líneas para el nombre y el teléfono, y una casilla de pagado. Es tu registro de ventas.</li>
+        <li><b>Boleto para el comprador</b> con el nombre de la rifa, los premios, el valor, la fecha del sorteo y tus datos de pago.</li>
+        <li><b>Número grande</b> en ambos lados, para que no haya confusiones al cortar.</li>
+        <li><b>Código QR opcional</b> con tu WhatsApp o Instagram.</li>
+      </ul>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Cómo imprimir y armar el talonario</h2>
+      <ol class="grid list-decimal gap-3 pl-5 text-muted marker:font-mono marker:text-accent [&_b]:text-ink">
+        <li><b>Imprime en tamaño real</b> (100 %), sin "ajustar a la página", para que las líneas de corte calcen.</li>
+        <li><b>Recorta por las líneas punteadas</b> exteriores y separa cada boleto de su colilla por la línea del medio al venderlo.</li>
+        <li><b>Engrapa las colillas</b> en orden: al final del día sabes qué números vendiste y quién te debe.</li>
+      </ol>
+      <p class="leading-relaxed text-muted">Cuando termines de vender, sortea con el <a class="text-accent underline" href="/sorteo-de-rifa">sorteo de rifa verificable</a>: pegas los números vendidos y compartes el comprobante.</p>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Preguntas frecuentes</h2>
+      <div class="grid gap-2">
+        {preguntas.map(({ p, r }) => (
+          <details class="rounded-xl border border-line bg-surface px-4 py-3">
+            <summary class="cursor-pointer font-semibold marker:text-accent">{p}</summary>
+            <p class="pt-2 leading-relaxed text-muted">{r}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-16"><ListaEspera origen="plantilla" titulo="¿Prefieres vender sin papel?" /></div>
+</Base>

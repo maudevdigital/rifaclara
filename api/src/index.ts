@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { rondaDrand } from "@rifaclara/shared";
 import { borrarAntiguos, sorteos } from "./sorteos";
+import { listaEspera } from "./lista-espera";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual.
@@ -15,6 +16,7 @@ app.get("/salud", (c) =>
 );
 
 app.route("/sorteos", sorteos);
+app.route("/lista-espera", listaEspera);
 
 app.notFound((c) => c.json({ error: "No existe esa ruta de la API" }, 404));
 app.onError((e, c) => {

@@ -1,0 +1,33 @@
+---
+import Base from "../layouts/Base.astro";
+
+const actualizada = "15 de septiembre de 2026";
+---
+<Base title="Privacidad | Rifa Clara" description="Qué datos guarda Rifa Clara, para qué, por cuánto tiempo y cómo pedir que los borremos.">
+  <article class="grid max-w-3xl gap-6 pt-4">
+    <h1 class="text-4xl font-semibold tracking-tight">Privacidad</h1>
+    <p class="text-sm text-muted">Actualizada el {actualizada}.</p>
+    <div class="prosa">
+      <p>Rifa Clara es un proyecto de <a href="https://maudev.cl">Maudev</a>. Guardamos lo mínimo para que las herramientas funcionen, según la Ley 21.719 de protección de datos personales.</p>
+
+      <h2>Qué guardamos y para qué</h2>
+      <table>
+        <thead><tr><th>Dónde</th><th>Qué se guarda</th><th>Para qué</th><th>Cuánto tiempo</th></tr></thead>
+        <tbody>
+          <tr><td>Ruleta en modo rápido</td><td>Nada en nuestros servidores. La lista queda en tu navegador.</td><td>Que no pierdas tu lista al recargar</td><td>Hasta que la borres</td></tr>
+          <tr><td>Sorteos verificables</td><td>La lista sorteada, su huella, la ronda de drand y el resultado</td><td>Que cualquiera con el enlace pueda comprobar el sorteo</td><td>90 días; después se borran solos</td></tr>
+          <tr><td>Plantilla de rifa</td><td>Nada. El PDF se arma en tu navegador.</td><td>—</td><td>—</td></tr>
+          <tr><td>Lista de espera</td><td>Tu correo, quién organiza, el tamaño de tus rifas y tu respuesta sobre el precio</td><td>Avisarte cuando puedas crear tu rifa y saber si el servicio es útil</td><td>Hasta 12 meses después del lanzamiento, o hasta que pidas la baja</td></tr>
+        </tbody>
+      </table>
+
+      <p>No vendemos ni compartimos tus datos. Los servidores y la base de datos son de Cloudflare. Por ahora no usamos cookies de publicidad; si más adelante mostramos anuncios, te pediremos permiso antes.</p>
+
+      <h2>Tus derechos</h2>
+      <p>Puedes pedir ver, corregir o borrar tus datos, u oponerte a que los usemos. Escríbenos desde <a href="https://maudev.cl/contacto">maudev.cl/contacto</a> indicando el correo que usaste, y te responderemos lo antes posible.</p>
+
+      <h2>Cambios</h2>
+      <p>Si cambiamos esta política, actualizaremos la fecha de arriba. Si el cambio afecta a los datos que ya nos diste, te avisaremos por correo.</p>
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,90 @@
+---
+// Generador de la plantilla de rifa. La lógica vive en src/scripts/plantilla.ts.
+const campo = "w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink focus:border-accent focus:outline-none";
+const etiqueta = "grid gap-1 text-sm font-medium";
+---
+<div data-plantilla class="grid items-start gap-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+  <form class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5" onsubmit="return false">
+    <p class="rounded-lg bg-salvia px-3 py-2 text-xs text-muted">Datos de ejemplo: cámbialos por los de tu rifa. Todo se genera en tu navegador; no guardamos nada.</p>
+    <label class={etiqueta} for="plantilla-titulo">Nombre de la rifa
+      <input id="plantilla-titulo" data-campo="titulo" maxlength="90" class={campo} value="Rifa a beneficio · Bomberos 3ª Compañía" />
+    </label>
+    <label class={etiqueta} for="plantilla-premios">Premios <span class="font-normal text-muted">(uno por línea, hasta 3)</span>
+      <textarea id="plantilla-premios" data-campo="premios" rows="3" class={campo}>{"1er premio: TV 55\"\n2º premio: Canasta familiar"}</textarea>
+    </label>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class={etiqueta} for="plantilla-valor">Valor del número
+        <input id="plantilla-valor" data-campo="valor" maxlength="20" class={campo} value="$2.000" />
+      </label>
+      <label class={etiqueta} for="plantilla-papel">Papel
+        <select id="plantilla-papel" data-campo="papel" class={campo}>
+          <option value="carta" selected>Carta (8 boletos por hoja)</option>
+          <option value="oficio">Oficio (10 por hoja)</option>
+          <option value="a4">A4 (8 por hoja)</option>
+        </select>
+      </label>
+    </div>
+    <label class={etiqueta} for="plantilla-fecha">Fecha y forma del sorteo
+      <input id="plantilla-fecha" data-campo="fecha" maxlength="90" class={campo} value="Sábado 20 de septiembre, 20:00 · en vivo por Instagram" />
+    </label>
+    <label class={etiqueta} for="plantilla-contacto">Datos de pago o contacto <span class="font-normal text-muted">(opcional)</span>
+      <input id="plantilla-contacto" data-campo="contacto" maxlength="110" class={campo} value="Transferencias: Cuenta RUT 12.345.678-9 · WhatsApp +56 9 1234 5678" />
+    </label>
+    <div class="grid grid-cols-2 gap-4">
+      <label class={etiqueta} for="plantilla-desde">Desde el número
+        <input id="plantilla-desde" data-campo="desde" type="number" inputmode="numeric" min="0" max="9999" value="1" class={campo} />
+      </label>
+      <label class={etiqueta} for="plantilla-hasta">Hasta el número
+        <input id="plantilla-hasta" data-campo="hasta" type="number" inputmode="numeric" min="1" max="9999" value="100" class={campo} />
+      </label>
+    </div>
+    <label class={etiqueta} for="plantilla-qr">Enlace para el código QR <span class="font-normal text-muted">(opcional)</span>
+      <input id="plantilla-qr" data-campo="qr" type="url" inputmode="url" maxlength="300" placeholder="https://wa.me/56912345678" class={campo} />
+      <span class="text-xs font-normal text-muted">Por ejemplo tu WhatsApp o Instagram. Cada boleto lo trae impreso.</span>
+    </label>
+    <p data-error class="text-sm text-danger" hidden></p>
+  </form>
+
+  <div class="grid gap-4 lg:sticky lg:top-6">
+    <div class="grid gap-3 rounded-2xl border border-line bg-surface p-4 sm:p-5">
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="font-semibold">Vista previa</span>
+        <span data-resumen class="font-mono text-xs text-muted">100 números · 13 hojas</span>
+      </div>
+      <!-- Réplica del boleto del PDF, a escala -->
+      <div class="boleto grid grid-cols-[30%_1fr] overflow-hidden rounded-md border border-dashed border-line bg-white text-[#13302C]">
+        <div class="grid content-between gap-2 border-r border-dashed border-line p-3">
+          <div><span class="block text-[10px] text-[#57645F]">N°</span><b data-prev="numero" class="font-mono text-2xl text-[#1D6359]">001</b></div>
+          <div class="grid gap-3 text-[9px] text-[#57645F]"><span class="border-b border-[#C9D3CE] pb-2">Nombre</span><span class="border-b border-[#C9D3CE] pb-2">Teléfono</span><span class="border-b border-[#C9D3CE] pb-2">Vendió</span><span>☐ Pagado</span></div>
+        </div>
+        <div class="grid content-between gap-2 p-3">
+          <div class="grid gap-1">
+            <b data-prev="titulo" class="text-[13px] leading-tight"></b>
+            <span data-prev="premios" class="text-[11px] leading-snug whitespace-pre-line"></span>
+            <b data-prev="valor" class="text-[12px] text-[#1D6359]"></b>
+            <span data-prev="fecha" class="text-[10px] leading-snug"></span>
+            <span data-prev="contacto" class="text-[9.5px] leading-snug text-[#57645F]"></span>
+          </div>
+          <div class="flex items-end justify-between gap-3">
+            <div class="grid gap-1">
+              <span data-prev="qr" class="block size-14" hidden></span>
+              <span class="text-[8px] text-[#57645F]">Sorteo verificable en rifaclara.maudev.cl</span>
+            </div>
+            <span class="font-mono text-2xl font-bold text-[#1D6359]"><small class="mr-1 font-sans text-[10px] font-normal text-[#57645F]">N°</small><span data-prev="numero2">001</span></span>
+          </div>
+        </div>
+      </div>
+      <button data-descargar type="button" class="rounded-xl bg-accent px-6 py-3.5 font-semibold text-accent-ink hover:brightness-110 disabled:cursor-wait disabled:opacity-60">Descargar PDF</button>
+      <p data-estado aria-live="polite" class="min-h-5 text-center text-sm text-muted"></p>
+    </div>
+    <p class="text-xs leading-relaxed text-muted">Imprime en tamaño real, recorta por las líneas punteadas y engrapa las colillas: el boleto se entrega y la colilla queda contigo con el nombre y teléfono de quien compró.</p>
+  </div>
+</div>
+
+<style>
+  .boleto { aspect-ratio: 95 / 62; }
+</style>
+
+<script>
+  import "../scripts/plantilla.ts";
+</script>

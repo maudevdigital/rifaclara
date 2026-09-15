@@ -62,3 +62,14 @@ En el repo de GitHub hay que crear dos secretos:
 El primer despliegue de la web crea el dominio `rifaclara.maudev.cl` en la zona
 de Cloudflare de maudev.cl. La API tiene que existir antes, porque la web
 depende de ella por el binding.
+
+## Lista de espera
+
+Los organizadores que se anotan quedan en la tabla `lista_espera` de D1. Para
+revisarlos (la columna `pagaria` responde si pagarían $4.990 por rifa):
+
+```bash
+cd api
+npx wrangler d1 execute rifaclara --remote --command "SELECT tipo, numeros, pagaria, COUNT(*) AS n FROM lista_espera GROUP BY 1, 2, 3 ORDER BY n DESC"
+npx wrangler d1 execute rifaclara --remote --command "SELECT email, tipo, pagaria, datetime(creado_en, 'unixepoch') FROM lista_espera ORDER BY creado_en DESC"
+```
