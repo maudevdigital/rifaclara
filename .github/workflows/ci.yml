@@ -15,7 +15,11 @@ jobs:
     outputs:
       api: ${{ steps.cambios.outputs.api }}
       web: ${{ steps.cambios.outputs.web }}
+      token: ${{ steps.token.outputs.hay }}
     steps:
+      # Sin el secreto CLOUDFLARE_API_TOKEN se verifica todo pero no se despliega.
+      - id: token
+        run: echo "hay=${{ secrets.CLOUDFLARE_API_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: cambios
@@ -35,7 +39,7 @@ jobs:
   # La API va primero: la web nueva puede depender de un endpoint nuevo.
   desplegar-api:
     needs: verificar
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.verificar.outputs.api == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.verificar.outputs.api == 'true' && needs.verificar.outputs.token == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +58,7 @@ jobs:
     needs: [verificar, desplegar-api]
     if: >-
       always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
-      && needs.verificar.result == 'success' && needs.verificar.outputs.web == 'true'
+      && needs.verificar.result == 'success' && needs.verificar.outputs.web == 'true' && needs.verificar.outputs.token == 'true'
       && needs.desplegar-api.result != 'failure'
     runs-on: ubuntu-latest
     steps:
