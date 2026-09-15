@@ -15,7 +15,10 @@ const boton = "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-m
           <div data-prueba hidden class="grid gap-1.5 rounded-lg bg-ok-soft px-3 py-2.5 text-left">
             <span class="text-xs font-semibold text-ok">✓ Sorteo verificable</span>
             <span data-prueba-detalle class="font-mono text-[11px] break-words text-ink"></span>
-            <button data-copiar type="button" class="justify-self-start text-xs font-semibold text-accent underline underline-offset-2">Copiar comprobante</button>
+            <span class="flex gap-4">
+              <button data-copiar type="button" class="text-xs font-semibold text-accent underline underline-offset-2">Copiar enlace</button>
+              <a data-enlace href="/ruleta" target="_blank" class="text-xs font-semibold text-accent underline underline-offset-2">Ver comprobante</a>
+            </span>
           </div>
           <div class="flex flex-wrap justify-center gap-2">
             <button data-quitar-ganador type="button" class={boton}>Quitar de la lista</button>

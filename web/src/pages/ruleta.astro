@@ -14,7 +14,7 @@ const preguntas = [
   },
   {
     p: "¿Se guardan mis nombres en algún servidor?",
-    r: "No. La lista se guarda solo en tu navegador para que no la pierdas al recargar. En modo verificable únicamente se consulta el número público de drand; tu lista no sale de tu equipo.",
+    r: "En modo rápido, no: la lista queda solo en tu navegador. En modo verificable la lista se guarda en Rifa Clara durante 90 días, porque es lo que permite que cualquiera con el enlace compruebe el resultado. Después se borra sola. Si no quieres que se guarde, usa el modo rápido.",
   },
   {
     p: "¿Puedo usarla para sortear una rifa?",
@@ -70,9 +70,9 @@ const jsonLd = [
       <h2 class="text-2xl font-semibold">Modo verificable: un giro que se puede comprobar</h2>
       <p class="leading-relaxed text-muted">La mayoría de las ruletas online te piden confiar. Esta te deja comprobar. Al girar en modo verificable pasan tres cosas:</p>
       <ul class="grid gap-3 pl-5 text-muted marker:text-accent [&_b]:text-ink list-disc">
-        <li><b>Se sella la lista.</b> Se calcula la huella SHA-256 de los nombres en el orden en que están.</li>
-        <li><b>Se fija una ronda futura de drand.</b> drand es un faro público de números aleatorios que mantienen Cloudflare, universidades y otras organizaciones, y emite un número nuevo cada 3 segundos. La ronda se elige antes de que exista, así que nadie puede saber qué va a salir.</li>
-        <li><b>El ganador sale de un cálculo público:</b> <code class="rounded bg-salvia px-1 font-mono text-sm text-ink">sha256(azar:ruleta:huella:0) mod cantidad</code>. Con el comprobante, cualquiera puede repetir el cálculo y llegar al mismo nombre.</li>
+        <li><b>Se sella y se registra la lista.</b> Rifa Clara guarda los nombres en el orden en que están y calcula su huella SHA-256. Desde ese momento la lista no se puede cambiar.</li>
+        <li><b>Se fija una ronda futura de drand.</b> drand es un faro público de números aleatorios que mantienen Cloudflare, universidades y otras organizaciones, y emite un número nuevo cada 3 segundos. La ronda se elige con el reloj de nuestro servidor antes de que exista, así que nadie puede saber qué va a salir ni girar varias veces hasta que salga quien quiere.</li>
+        <li><b>El ganador sale de un cálculo público:</b> <code class="rounded bg-salvia px-1 font-mono text-sm text-ink">sha256(azar:id:huella:0) mod cantidad</code>. Tu navegador repite el cálculo antes de mostrar el resultado, y el enlace del sorteo deja que cualquiera lo compruebe leyendo drand directamente.</li>
       </ul>
       <p class="leading-relaxed text-muted">Úsalo para sorteos en Instagram, rifas pequeñas o transmisiones en vivo: el botón de pantalla completa deja la ruleta lista para proyectar.</p>
     </section>

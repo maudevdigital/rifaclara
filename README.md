@@ -34,6 +34,19 @@ npm run build && cd web && npx wrangler dev --port 8788
 Después de cambiar un `wrangler.jsonc`, regenera los tipos con
 `npx wrangler types` (en `api/` se usa `--env-interface CloudflareBindings`).
 
+## Base de datos (D1)
+
+La base `rifaclara` usa migraciones SQL en `api/migrations/`. Para crear una
+nueva: `npx wrangler d1 migrations create rifaclara <nombre>` dentro de `api/`.
+
+```bash
+cd api
+npx wrangler d1 migrations apply rifaclara --local    # base local de wrangler dev
+npx wrangler d1 migrations apply rifaclara --remote   # producción (el CI lo hace solo)
+```
+
+Los sorteos se borran a los 90 días con el cron diario de la API.
+
 ## Despliegue
 
 `.github/workflows/ci.yml` corre pruebas, tipos y build en cada push. En `main`
@@ -42,8 +55,8 @@ despliega solo lo que cambió: primero la API y después la web. Un cambio en
 
 En el repo de GitHub hay que crear dos secretos:
 
-- `CLOUDFLARE_API_TOKEN`: token con permisos *Workers Scripts: Edit* y
-  *Workers Routes: Edit* sobre la zona `maudev.cl`.
+- `CLOUDFLARE_API_TOKEN`: token con permisos *Workers Scripts: Edit*,
+  *D1: Edit* y *Workers Routes: Edit* sobre la zona `maudev.cl`.
 - `CLOUDFLARE_ACCOUNT_ID`.
 
 El primer despliegue de la web crea el dominio `rifaclara.maudev.cl` en la zona

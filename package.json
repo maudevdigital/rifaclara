@@ -14,7 +14,7 @@
     "dev:api": "npm run dev -w @rifaclara/api",
     "dev:web": "npm run dev -w @rifaclara/web",
     "build": "npm run build -w @rifaclara/web",
-    "test": "npm test -w @rifaclara/shared",
+    "test": "npm test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "allowScripts": {

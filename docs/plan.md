@@ -132,7 +132,7 @@ Límites del plan gratuito que importan: 100 mil peticiones al día y **10 ms de
 | tickets      | PK (rifa, número), estado, reserva, pagado en                                                                                                                                      |
 | reservations | código, rifa, nombre, teléfono, vence en, estado                                                                                                                                   |
 | draws        | rifa, ronda, azar, firma, resultados                                                                                                                                               |
-| name_draws   | id, huella de la lista, ronda, resultado (sorteo de nombres de la fase 1)                                                                                                          |
+| sorteos | id, tipo, título, lista (JSON), huella, ronda, azar, firma, ganador, creado en, resuelto en. Se borran a los 90 días (ya existe) |
 | events       | rifa, tipo, datos, hash anterior, hash (registro que solo crece)                                                                                                                   |
 
 País y moneda quedan desde el inicio aunque solo se habilite Chile.

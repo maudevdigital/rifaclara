@@ -1,4 +1,5 @@
-import { formatearNumero, leerRonda, rondaDrand, sha256, sortear } from "@rifaclara/shared";
+import { azarCoincideConFirma, formatearNumero, sha256, sortear } from "@rifaclara/shared";
+import type { SorteoCreado, SorteoPublico } from "@rifaclara/shared";
 
 // Colores de la rueda: fijos en ambos temas (la rueda es un objeto, no fondo).
 const COLORES = [
@@ -14,7 +15,7 @@ const CLAVE = "rifaclara:ruleta";
 const VUELTA = Math.PI * 2;
 
 type Modo = "rapido" | "verificable";
-interface Prueba { ronda: number; azar: string; huella: string; lista: string[]; linea: string }
+interface Prueba { id: string; ronda: number; azar: string; huella: string }
 interface Giro { nombre: string; prueba: Prueba | null }
 
 const raiz = document.querySelector<HTMLElement>("[data-ruleta]");
@@ -162,6 +163,36 @@ function iniciar(raiz: HTMLElement) {
     return () => { activo = false; };
   }
 
+  // ---------- sorteo verificable: el compromiso queda en la API ----------
+  async function api<T>(ruta: string, init?: RequestInit): Promise<T> {
+    const res = await fetch(ruta, init);
+    const datos = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(datos.error ?? `la API respondió ${res.status}`);
+    return datos as T;
+  }
+
+  async function esperarResultado({ id, momento }: SorteoCreado): Promise<SorteoPublico> {
+    const falta = momento * 1000 - Date.now() + 600;
+    if (falta > 0) await new Promise((r) => setTimeout(r, falta));
+    for (let intento = 0; intento < 15; intento++) {
+      const s = await api<SorteoPublico>(`/api/sorteos/${id}`);
+      if (s.estado === "resuelto") return s;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new Error("drand tardó más de lo normal");
+  }
+
+  // No se confía a ciegas en el servidor: el navegador rehace el cálculo.
+  async function comprobarLocal(s: SorteoPublico, lista: string[]) {
+    const ok =
+      s.azar && s.firma && s.ganador &&
+      s.lista.join("\n") === lista.join("\n") &&
+      (await sha256(lista.join("\n"))) === s.huella &&
+      (await azarCoincideConFirma({ ronda: s.ronda, azar: s.azar, firma: s.firma })) &&
+      (await sortear({ azar: s.azar, rifaId: s.id, lista, premios: 1 })).ganadores[0]!.linea === s.ganador.linea;
+    if (!ok) throw new Error("el resultado del servidor no coincide con el cálculo de tu navegador");
+  }
+
   function aleatorio(n: number) {
     const tope = Math.floor(2 ** 32 / n) * n;
     const a = new Uint32Array(1);
@@ -184,17 +215,21 @@ function iniciar(raiz: HTMLElement) {
         indice = aleatorio(nombres.length);
       } else {
         const lista = nombres.map((nombre, i) => `${formatearNumero(i, nombres.length)}:${nombre}`);
-        const huella = await sha256(lista.join("\n"));
-        // La ronda queda fijada antes de que exista su azar.
-        const ronda = rondaDrand(Date.now() / 1000) + 1;
-        estado.textContent = `Ronda ${ronda} de drand fijada. Esperando el azar público…`;
+        estado.textContent = "Registrando el sorteo…";
+        // La API guarda la lista y fija una ronda futura con su propio reloj,
+        // antes de que exista el azar. Así no sirve girar hasta que salga alguien.
+        const creado = await api<SorteoCreado>("/api/sorteos", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ nombres, tipo: "ruleta" }),
+        });
+        estado.textContent = `Ronda ${creado.ronda} de drand fijada y registrada. Esperando el azar público…`;
         const detener = giroDeEspera();
         try {
-          const r = await leerRonda(ronda);
-          const { ganadores } = await sortear({ azar: r.azar, rifaId: "ruleta", lista, premios: 1 });
-          const linea = ganadores[0]!.linea;
-          indice = lista.indexOf(linea);
-          prueba = { ronda, azar: r.azar, huella, lista, linea };
+          const s = await esperarResultado(creado);
+          await comprobarLocal(s, lista);
+          indice = s.ganador!.indice;
+          prueba = { id: s.id, ronda: s.ronda, azar: s.azar!, huella: s.huella };
         } finally {
           detener();
         }
@@ -216,19 +251,7 @@ function iniciar(raiz: HTMLElement) {
   }
 
   // ---------- resultado ----------
-  function comprobante(p: Prueba) {
-    return [
-      "Sorteo verificable · Rifa Clara (rifaclara.maudev.cl/ruleta)",
-      `Ronda drand quicknet: ${p.ronda}`,
-      `Azar: ${p.azar}`,
-      `Huella de la lista: ${p.huella}`,
-      `Ganador: ${p.linea}`,
-      "Cálculo: sha256(azar:ruleta:huella:0) mod cantidad de líneas",
-      "",
-      "Lista, en orden:",
-      ...p.lista,
-    ].join("\n");
-  }
+  const enlaceDe = (p: Prueba) => new URL(`/sorteo/${p.id}`, location.origin).href;
 
   function mostrarGanador(giro: Giro, indice: number) {
     $("[data-ganador]").textContent = giro.nombre;
@@ -238,6 +261,7 @@ function iniciar(raiz: HTMLElement) {
       const p = giro.prueba;
       $("[data-prueba-detalle]").textContent =
         `Ronda ${p.ronda} · azar ${p.azar.slice(0, 8)}…${p.azar.slice(-4)} · lista ${p.huella.slice(0, 8)}…`;
+      $<HTMLAnchorElement>("[data-enlace]").href = enlaceDe(p);
     }
     $<HTMLButtonElement>("[data-quitar-ganador]").onclick = () => {
       escribirNombres(nombres.filter((_, i) => i !== indice));
@@ -246,10 +270,10 @@ function iniciar(raiz: HTMLElement) {
     $<HTMLButtonElement>("[data-copiar]").onclick = async () => {
       if (!giro.prueba) return;
       try {
-        await navigator.clipboard.writeText(comprobante(giro.prueba));
-        estado.textContent = "Comprobante copiado.";
+        await navigator.clipboard.writeText(enlaceDe(giro.prueba));
+        estado.textContent = "Enlace copiado. Quien lo abra puede verificar el resultado.";
       } catch {
-        estado.textContent = "Tu navegador no dejó copiar. Selecciona el comprobante a mano.";
+        estado.textContent = `Tu navegador no dejó copiar. El enlace es ${enlaceDe(giro.prueba)}`;
       }
     };
     dialogo.hidden = false;
@@ -264,9 +288,10 @@ function iniciar(raiz: HTMLElement) {
       li.className = "flex items-baseline justify-between gap-3";
       const nombre = document.createElement("span");
       nombre.textContent = `${historial.length - i}. ${g.nombre}`;
-      const tipo = document.createElement("span");
-      tipo.className = g.prueba ? "font-mono text-xs text-ok" : "font-mono text-xs text-muted";
+      const tipo = document.createElement(g.prueba ? "a" : "span");
+      tipo.className = g.prueba ? "font-mono text-xs text-ok underline underline-offset-2" : "font-mono text-xs text-muted";
       tipo.textContent = g.prueba ? `✓ ronda ${g.prueba.ronda}` : "rápido";
+      if (g.prueba && tipo instanceof HTMLAnchorElement) { tipo.href = enlaceDe(g.prueba); tipo.target = "_blank"; }
       li.append(nombre, tipo);
       historialEl.append(li);
     });
@@ -278,7 +303,7 @@ function iniciar(raiz: HTMLElement) {
     raiz.querySelectorAll<HTMLInputElement>("[name=ruleta-modo]").forEach((r) => (r.checked = r.value === m));
     ayudaModo.textContent = m === "rapido"
       ? "Resultado inmediato, con el azar de tu navegador."
-      : "El resultado sale de un número aleatorio público de drand, fijado antes de conocerlo. Tarda unos segundos y se puede comprobar.";
+      : "El resultado sale de un número aleatorio público de drand, fijado antes de conocerlo. Tarda unos segundos y te da un enlace para que cualquiera lo compruebe. La lista se guarda 90 días.";
     guardar();
   }
 

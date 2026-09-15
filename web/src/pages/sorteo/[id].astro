@@ -1,0 +1,113 @@
+---
+import { env } from "cloudflare:workers";
+import type { SorteoPublico } from "@rifaclara/shared";
+import { DRAND_QUICKNET } from "@rifaclara/shared";
+import Base from "../../layouts/Base.astro";
+
+export const prerender = false;
+
+const { id = "" } = Astro.params;
+const res = await env.API.fetch(new Request(new URL(`/api/sorteos/${encodeURIComponent(id)}`, Astro.url)));
+const s: SorteoPublico | null = res.ok ? await res.json() : null;
+if (!s) Astro.response.status = 404;
+
+const fecha = (seg: number) =>
+  new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "medium" }).format(seg * 1000);
+const urlRonda = s ? `https://api.drand.sh/${DRAND_QUICKNET.chainHash}/public/${s.ronda}` : "";
+const titulo = s?.ganador
+  ? `Ganó ${s.ganador.nombre} · Sorteo verificable | Rifa Clara`
+  : s ? "Sorteo verificable en curso | Rifa Clara" : "Sorteo no encontrado | Rifa Clara";
+const descripcion = s
+  ? `Sorteo entre ${s.lista.length} participantes con la ronda ${s.ronda} de drand. Cualquiera puede comprobar el resultado.`
+  : "Este sorteo no existe o ya se borró.";
+const filas = s
+  ? [
+      ["Registrado", fecha(s.creadoEn)],
+      ["Ronda de drand", String(s.ronda)],
+      ["Emitida", fecha(s.momento)],
+      ["Participantes", String(s.lista.length)],
+      ["Huella de la lista", s.huella],
+      ["Azar", s.azar ?? "todavía no existe"],
+      ["Firma de drand", s.firma ?? "todavía no existe"],
+    ]
+  : [];
+---
+<Base title={titulo} description={descripcion} noindex>
+  {!s && (
+    <section class="grid gap-4 py-16">
+      <h1 class="text-4xl font-semibold">No encontramos este sorteo</h1>
+      <p class="max-w-[56ch] text-muted">El enlace puede estar incompleto, o el sorteo tiene más de 90 días y ya se borró.</p>
+      <a href="/ruleta" class="justify-self-start rounded-lg bg-accent px-5 py-3 font-semibold text-accent-ink">Hacer un sorteo nuevo</a>
+    </section>
+  )}
+
+  {s && (
+    <div class="grid gap-10 py-6">
+      <section class="grid justify-items-start gap-4">
+        <span class="inline-flex items-center gap-2 rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
+          <i class="size-1.5 rounded-full bg-ok"></i>Sorteo verificable · {s.titulo ?? (s.tipo === "ruleta" ? "Ruleta" : "Sorteo de nombres")}
+        </span>
+        {s.ganador ? (
+          <>
+            <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Ganó</span>
+            <h1 class="text-5xl font-semibold tracking-tight break-words text-accent sm:text-6xl">{s.ganador.nombre}</h1>
+            <p class="text-muted">Línea <code class="font-mono text-ink">{s.ganador.linea}</code> de {s.lista.length}, sorteada con la ronda {s.ronda} de drand.</p>
+          </>
+        ) : (
+          <>
+            <h1 class="text-4xl font-semibold">Esperando la ronda {s.ronda} de drand…</h1>
+            <p data-pendiente data-id={s.id} class="text-muted">El resultado aparece solo en unos segundos.</p>
+          </>
+        )}
+      </section>
+
+      <section class="grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-xl font-semibold">Comprobante</h2>
+          {s.ganador && (
+            <button data-verificar type="button" class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink hover:brightness-110">Verificar en mi navegador</button>
+          )}
+        </div>
+        <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+          {filas.map(([k, v]) => (
+            <>
+              <dt class="text-muted">{k}</dt>
+              <dd class="font-mono break-all">{v}</dd>
+            </>
+          ))}
+        </dl>
+        <ol data-pasos class="grid gap-1.5 font-mono text-xs" aria-live="polite"></ol>
+        <p class="text-xs text-muted">
+          El azar se puede ver directo en drand: <a class="break-all text-accent underline" href={urlRonda} target="_blank" rel="noopener">{urlRonda}</a>
+        </p>
+      </section>
+
+      <section class="grid gap-3">
+        <h2 class="text-xl font-semibold">Lista sorteada ({s.lista.length})</h2>
+        <details class="rounded-2xl border border-line bg-surface p-4" open={s.lista.length <= 30}>
+          <summary class="cursor-pointer text-sm font-semibold">Ver las {s.lista.length} líneas en el orden sorteado</summary>
+          <ol class="mt-3 grid gap-1 font-mono text-sm sm:grid-cols-2">
+            {s.lista.map((linea) => (
+              <li class:list={["rounded px-2 py-0.5", linea === s.ganador?.linea && "bg-pick font-semibold text-pick-ink"]}>{linea}</li>
+            ))}
+          </ol>
+        </details>
+      </section>
+
+      <section class="grid max-w-3xl gap-3 text-muted">
+        <h2 class="text-xl font-semibold text-ink">Cómo se calcula</h2>
+        <p>La lista y su huella quedaron registradas antes de que existiera la ronda {s.ronda} de drand, que se emite cada 3 segundos y nadie conoce de antemano. El ganador sale de:</p>
+        <code class="rounded-lg bg-salvia px-3 py-2 font-mono text-sm break-all text-ink">sha256(azar:{s.id}:huella:0) mod {s.lista.length}</code>
+        <p>El botón de verificar lee el azar directo desde drand, sin pasar por Rifa Clara, y repite cada paso en tu navegador.</p>
+      </section>
+
+      <a href="/ruleta" class="justify-self-start rounded-lg border border-line bg-surface px-5 py-3 font-semibold hover:border-accent hover:text-accent">Hacer mi propio sorteo</a>
+    </div>
+  )}
+
+  {s && <script type="application/json" id="datos-sorteo" set:html={JSON.stringify(s)} />}
+</Base>
+
+<script>
+  import "../../scripts/verificar-sorteo.ts";
+</script>

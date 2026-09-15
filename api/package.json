@@ -5,11 +5,13 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@rifaclara/shared": "*",
     "hono": "^4.13.7",
-    "@rifaclara/shared": "*"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "wrangler": "^4.110.0"
