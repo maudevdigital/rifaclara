@@ -37,6 +37,13 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
         <label class={etiqueta} for="rifa-descripcion">Descripción <span class="font-normal text-muted">(opcional)</span>
           <textarea id="rifa-descripcion" name="descripcion" rows="3" maxlength="600" placeholder="Para qué es la rifa y cualquier detalle del premio." class={campo}></textarea>
         </label>
+        <div class="grid gap-2">
+          <label class={etiqueta} for="rifa-foto">Foto del premio <span class="font-normal text-muted">(opcional, pero vende mucho más)</span>
+            <input id="rifa-foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-salvia file:px-4 file:py-2 file:font-semibold file:text-ink" />
+          </label>
+          <img data-vista-foto alt="Vista previa de la foto del premio" hidden class="max-h-56 w-auto justify-self-start rounded-xl border border-line object-cover" />
+          <p class="text-xs text-muted">Se achica antes de subirla. Aparece en la página de la rifa y en la vista previa al compartirla por WhatsApp.</p>
+        </div>
       </fieldset>
 
       <fieldset class={bloque}>
@@ -95,6 +102,7 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
 
 <script>
   import { tramoPara } from "@rifaclara/shared";
+  import { achicarFoto, dibujarTarjeta, fechaCorta, subirImagen } from "../../lib/imagenes";
   const form = document.querySelector<HTMLFormElement>("[data-nueva-rifa]")!;
   const mensaje = form.querySelector<HTMLElement>("[data-mensaje]")!;
   const boton = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
@@ -132,6 +140,14 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
     if (n === 5) (e.currentTarget as HTMLElement).hidden = true;
   });
 
+  // Vista previa de la foto elegida.
+  const vista = form.querySelector<HTMLImageElement>("[data-vista-foto]")!;
+  campo("foto").addEventListener("change", () => {
+    const archivo = campo("foto").files?.[0];
+    vista.hidden = !archivo;
+    if (archivo) vista.src = URL.createObjectURL(archivo);
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = new FormData(form);
@@ -154,6 +170,26 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
       const r = await res.json().catch(() => ({}));
       if (res.status === 401) { location.href = "/ingresar"; return; }
       if (!res.ok) throw new Error(r.error ?? "No se pudo publicar");
+      // La rifa ya existe: la foto y la tarjeta para compartir son un extra. Si fallan,
+      // se puede volver a intentar desde el panel sin perder la rifa.
+      try {
+        let imagen: ImageBitmap | null = null;
+        const archivo = (f.get("foto") as File | null);
+        if (archivo && archivo.size > 0) {
+          mensaje.textContent = "Subiendo la foto…";
+          const foto = await achicarFoto(archivo);
+          await subirImagen(r.id, "foto", foto.blob);
+          imagen = foto.imagen;
+        }
+        mensaje.textContent = "Preparando la tarjeta para compartir…";
+        const tarjeta = await dibujarTarjeta({
+          titulo: datos.titulo, premio: datos.premios[0] ?? "", foto: imagen,
+          precio: clp.format(datos.precio), sorteo: fechaCorta(datos.cierreEn),
+        });
+        await subirImagen(r.id, "og", tarjeta);
+      } catch (err) {
+        console.error(err);
+      }
       location.href = r.requierePago ? `/panel/rifas/${r.id}` : `/r/${r.slug}?nueva=1`;
     } catch (err) {
       mensaje.className = "min-h-5 text-sm text-danger";

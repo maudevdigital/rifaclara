@@ -18,6 +18,8 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Fotos de premios y tarjetas para compartir. Las sube la API; las sirve la web.
+  "r2_buckets": [{ "binding": "FOTOS", "bucket_name": "rifaclara-fotos" }],
   // Tope de sorteos nuevos por IP, para que nadie llene la base.
   "ratelimits": [
     { "name": "LIMITE_SORTEOS", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },

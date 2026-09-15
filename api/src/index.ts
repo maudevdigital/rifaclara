@@ -7,6 +7,7 @@ import { rifas } from "./rifas";
 import { reservas, vencerReservas } from "./reservas";
 import { procesarCierres } from "./cierre";
 import { pagos } from "./pagos";
+import { imagenes } from "./imagenes";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
@@ -31,6 +32,7 @@ app.route("/auth", auth);
 app.route("/rifas", rifas);
 app.route("/reservas", reservas);
 app.route("/pagos", pagos);
+app.route("/imagenes", imagenes);
 app.route("/sorteos", sorteos);
 app.route("/lista-espera", listaEspera);
 

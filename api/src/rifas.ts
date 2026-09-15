@@ -29,8 +29,13 @@ interface FilaRifa {
   moneda: string;
   zona_horaria: string;
   sorteo_id: string | null;
+  foto: string | null;
+  og: string | null;
   creado_en: number;
 }
+
+/** Ruta pública de una imagen guardada en R2 (la sirve la web en /fotos/*). */
+const urlFoto = (clave: string | null) => (clave ? `/fotos/${clave}` : null);
 
 const ahora = () => Math.floor(Date.now() / 1000);
 
@@ -62,7 +67,7 @@ rifas.post("/", requiereUsuario, async (c) => {
 /** Rifas del organizador, con cuántos números hay pagados y reservados. */
 rifas.get("/", requiereUsuario, async (c) => {
   const { results } = await c.env.DB.prepare(
-    `SELECT r.id, r.slug, r.titulo, r.estado, r.cierre_en AS cierreEn, r.desde, r.hasta, r.precio,
+    `SELECT r.id, r.slug, r.titulo, r.estado, r.cierre_en AS cierreEn, r.desde, r.hasta, r.precio, r.foto,
        COALESCE(SUM(CASE WHEN s.estado = 'pagada' THEN 1 ELSE 0 END), 0) AS pagados,
        COALESCE(SUM(CASE WHEN s.estado = 'pendiente' THEN 1 ELSE 0 END), 0) AS reservados
      FROM rifas r
@@ -71,8 +76,8 @@ rifas.get("/", requiereUsuario, async (c) => {
      WHERE r.usuario_id = ?
      GROUP BY r.id
      ORDER BY r.creado_en DESC`,
-  ).bind(c.get("usuario")!.id).all();
-  return c.json({ rifas: results });
+  ).bind(c.get("usuario")!.id).all<{ foto: string | null }>();
+  return c.json({ rifas: results.map((x) => ({ ...x, foto: urlFoto(x.foto) })) });
 });
 
 /** Una rifa del organizador con todas sus reservas, para el panel. */
@@ -102,6 +107,7 @@ rifas.get("/:id/reservas", requiereUsuario, async (c) => {
     rifa: {
       id: r.id, slug: r.slug, titulo: r.titulo, estado: r.estado, precio: r.precio, desde: r.desde, hasta: r.hasta,
       cierreEn: r.cierre_en, zonaHoraria: r.zona_horaria, sorteoId: r.sorteo_id, premios: JSON.parse(r.premios) as string[],
+      foto: urlFoto(r.foto), og: urlFoto(r.og),
     },
     sorteo: s && { id: s.id, estado: s.estado, ronda: s.ronda, momento: s.momento, numerosEnSorteo: s.lista.length },
     ganadores,
@@ -154,6 +160,8 @@ rifas.get("/publica/:slug", async (c) => {
     horasReserva: r.horas_reserva,
     maxPorPersona: r.max_por_persona,
     sorteoId: r.sorteo_id,
+    foto: urlFoto(r.foto),
+    og: urlFoto(r.og),
     tomados,
     resultado: s && {
       sorteoId: s.id,

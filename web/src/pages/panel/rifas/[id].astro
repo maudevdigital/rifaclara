@@ -12,7 +12,7 @@ interface Reserva {
   estado: "pendiente" | "pagada" | "vencida" | "liberada"; venceEn: number; creadoEn: number; pagadaEn: number | null;
 }
 interface Datos {
-  rifa: { id: string; slug: string; titulo: string; estado: string; precio: number; desde: number; hasta: number; cierreEn: number; zonaHoraria: string; premios: string[] };
+  rifa: { id: string; slug: string; titulo: string; estado: string; precio: number; desde: number; hasta: number; cierreEn: number; zonaHoraria: string; premios: string[]; foto: string | null; og: string | null };
   sorteo: { id: string; estado: string; ronda: number; momento: number; numerosEnSorteo: number } | null;
   ganadores: { premio: number; numero: string; nombre: string | null; telefono: string | null; codigo: string | null }[];
   reservas: Reserva[];
@@ -90,6 +90,20 @@ const whatsapp = (x: Reserva) =>
           )}
         </div>
       )}
+      <div data-imagenes data-id={r.id} data-titulo={r.titulo} data-premio={r.premios[0] ?? ""} data-precio={pesos(r.precio)} data-cierre={r.cierreEn} data-zona={r.zonaHoraria} data-foto={r.foto ?? ""} data-og={r.og ?? ""}
+        class="grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-[auto_1fr] sm:items-center">
+        {r.foto
+          ? <img src={r.foto} alt={`Foto del premio: ${r.premios[0] ?? r.titulo}`} class="h-32 w-44 rounded-xl border border-line object-cover" />
+          : <div class="grid h-32 w-44 place-items-center rounded-xl border border-dashed border-line text-center text-xs text-muted">Sin foto del premio</div>}
+        <div class="grid gap-2">
+          <b>{r.foto ? "Foto del premio" : "Agrega una foto del premio"}</b>
+          <p class="text-sm text-muted">Se muestra en la página de la rifa y en la vista previa al compartirla por WhatsApp.{r.og && <> <a class="text-accent underline" href={r.og} target="_blank" rel="noopener">Ver la tarjeta para compartir</a></>}</p>
+          <label for="panel-foto" class="justify-self-start cursor-pointer rounded-lg bg-salvia px-4 py-2 text-sm font-semibold hover:brightness-95">{r.foto ? "Cambiar foto" : "Subir foto"}
+            <input id="panel-foto" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+          </label>
+          <p data-mensaje-foto aria-live="polite" class="min-h-5 text-sm text-muted"></p>
+        </div>
+      </div>
       <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Pagados", pagados], ["Por confirmar", porConfirmar], ["Libres", total - pagados - porConfirmar], ["Recaudado", pesos(pagados * r.precio)]].map(([k, v]) => (
           <div class="grid gap-1 rounded-xl border border-line bg-surface p-4"><span class="text-xs text-muted">{k}</span><b class="font-mono text-2xl">{v}</b></div>
@@ -137,6 +151,40 @@ const whatsapp = (x: Reserva) =>
 </Base>
 
 <script>
+  import { achicarFoto, cargarImagen, dibujarTarjeta, fechaCorta, subirImagen } from "../../../lib/imagenes";
+
+  // Foto del premio y tarjeta para compartir.
+  const caja = document.querySelector<HTMLElement>("[data-imagenes]");
+  if (caja) {
+    const d = caja.dataset;
+    const salida = caja.querySelector<HTMLElement>("[data-mensaje-foto]")!;
+    const tarjeta = (foto: ImageBitmap | null) =>
+      dibujarTarjeta({ titulo: d.titulo!, premio: d.premio!, precio: d.precio!, sorteo: fechaCorta(Number(d.cierre), d.zona), foto });
+    caja.querySelector<HTMLInputElement>("#panel-foto")!.addEventListener("change", async (e) => {
+      const archivo = (e.currentTarget as HTMLInputElement).files?.[0];
+      if (!archivo) return;
+      try {
+        salida.className = "min-h-5 text-sm text-muted";
+        salida.textContent = "Subiendo la foto…";
+        const foto = await achicarFoto(archivo);
+        await subirImagen(d.id!, "foto", foto.blob);
+        salida.textContent = "Actualizando la tarjeta para compartir…";
+        await subirImagen(d.id!, "og", await tarjeta(foto.imagen));
+        location.reload();
+      } catch (err) {
+        salida.className = "min-h-5 text-sm text-danger";
+        salida.textContent = (err as Error).message;
+      }
+    });
+    // Rifas creadas antes de las tarjetas: se generan una vez, al abrir el panel.
+    if (!d.og) {
+      (async () => {
+        const foto = d.foto ? await cargarImagen(d.foto).catch(() => null) : null;
+        await subirImagen(d.id!, "og", await tarjeta(foto));
+      })().catch((err) => console.error(err));
+    }
+  }
+
   const pagar = document.querySelector<HTMLButtonElement>("[data-pagar]");
   pagar?.addEventListener("click", async () => {
     const salida = document.querySelector<HTMLElement>("[data-mensaje-pago]")!;

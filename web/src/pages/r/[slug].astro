@@ -9,7 +9,7 @@ export const prerender = false;
 interface RifaPublica {
   slug: string; titulo: string; descripcion: string | null; premios: string[]; precio: number; moneda: string;
   desde: number; hasta: number; cierreEn: number; zonaHoraria: string; estado: string;
-  horasReserva: number; maxPorPersona: number; sorteoId: string | null;
+  horasReserva: number; maxPorPersona: number; sorteoId: string | null; foto: string | null; og: string | null;
   tomados: { n: string; e: "p" | "r" }[];
   resultado: {
     sorteoId: string; estado: "pendiente" | "resuelto"; ronda: number; momento: number; huella: string;
@@ -37,6 +37,7 @@ const clases = {
   title={`${titulo} | Rifa Clara`}
   description={r ? `${r.premios[0]}. ${numeros.length} números a ${pesos(r.precio)}. Sorteo verificable el ${fechaChile(r.cierreEn, r.zonaHoraria)}.` : "Esta rifa no existe."}
   noindex={!r}
+  imagen={r?.og ?? undefined}
 >
   {!r && (
     <section class="grid gap-4 py-16">
@@ -82,6 +83,7 @@ const clases = {
       )}
       <section class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div class="grid content-start gap-4">
+          {r.foto && <img src={r.foto} alt={`Foto del premio: ${r.premios[0] ?? r.titulo}`} width="1200" height="900" fetchpriority="high" class="aspect-[4/3] w-full rounded-2xl border border-line object-cover" />}
           <span class="inline-flex items-center gap-2 justify-self-start rounded-full bg-ok-soft px-3 py-1.5 font-mono text-xs text-ok">
             <i class="size-1.5 rounded-full bg-ok"></i>{r.estado === "abierta" ? "Abierta · sorteo verificable" : r.estado === "sorteada" ? "Sorteada" : "Cerrada · sorteando"}
           </span>

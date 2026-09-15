@@ -28,7 +28,8 @@ npm run local:api   # rifaclara-api en :8787 (usa api/.dev.vars)
 npm run local:web   # compila y sirve la web en http://127.0.0.1:8788
 ```
 
-`local:web` usa `--local-upstream 127.0.0.1:8788`: sin eso, wrangler reescribe
+Los dos usan `--persist-to ../.wrangler/local` para compartir D1 y R2 locales
+(la web sirve las fotos que sube la API). `local:web` además usa `--local-upstream 127.0.0.1:8788`: sin eso, wrangler reescribe
 `Host` y `Origin` con `rifaclara.maudev.cl` (la ruta de producción) y la API
 rechaza las peticiones con sesión por origen distinto.
 
@@ -55,7 +56,7 @@ nueva: `npx wrangler d1 migrations create rifaclara <nombre>` dentro de `api/`.
 
 ```bash
 cd api
-npx wrangler d1 migrations apply rifaclara --local    # base local de wrangler dev
+npx wrangler d1 migrations apply rifaclara --local --persist-to ../.wrangler/local   # base local
 npx wrangler d1 migrations apply rifaclara --remote   # producción (el CI lo hace solo)
 ```
 

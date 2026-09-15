@@ -9,5 +9,7 @@
   "routes": [{ "pattern": "rifaclara.maudev.cl", "custom_domain": true }],
   // /api/* se reenvía a rifaclara-api sin salir a internet.
   "services": [{ "binding": "API", "service": "rifaclara-api" }],
+  // Solo lectura desde la web: sirve /fotos/* directo desde R2.
+  "r2_buckets": [{ "binding": "FOTOS", "bucket_name": "rifaclara-fotos" }],
   "observability": { "enabled": true }
 }
