@@ -3,37 +3,25 @@ import { getCollection } from "astro:content";
 import { TRAMOS } from "@rifaclara/shared";
 import Base from "../layouts/Base.astro";
 import CrearRifa from "../components/CrearRifa.astro";
+import RifaEjemplo from "../components/RifaEjemplo.astro";
 import { pesos } from "../lib/formato";
 
-// Tarjeta de ejemplo del inicio: muestra cómo se ve una rifa. Datos inventados.
-const vendidos = new Set([1, 2, 4, 5, 8, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 26, 27, 29, 30, 31, 33, 34, 36, 37, 39, 40, 42, 43, 45, 46, 48, 49]);
-const reservados = new Set([6, 25, 38]);
-const elegidos = new Set([7, 47]);
-const numeros = Array.from({ length: 50 }, (_, n) => ({
-  n: String(n).padStart(2, "0"),
-  estado: elegidos.has(n) ? "elegido" : vendidos.has(n) ? "vendido" : reservados.has(n) ? "reservado" : "libre",
-}));
-const clases: Record<string, string> = {
-  libre: "border-line bg-surface text-ink",
-  vendido: "border-transparent bg-sold text-sold-ink",
-  reservado: "border-dashed border-muted text-muted",
-  elegido: "border-pick bg-pick font-semibold text-pick-ink",
-};
-
+// Capturas reales del producto (390 px a 2x), generadas con datos de demostración.
 const pasos = [
-  { t: "Crea la rifa", d: "Premios, cantidad de números, precio, fecha del sorteo y tus datos para recibir transferencias. Toma dos minutos." },
-  { t: "Comparte el enlace", d: "Mándalo por WhatsApp o Instagram. Cada persona elige sus números en la grilla y los reserva sin crear cuenta." },
-  { t: "Confirma los pagos", d: "Te transfieren directo a ti. Marcas quién pagó desde el panel; las reservas sin pagar se liberan solas." },
-  { t: "Sortea en vivo", d: "A la hora del cierre se sella la lista de números pagados y el ganador sale de un número aleatorio público." },
+  { t: "Crea la rifa", d: "Premios, cantidad de números, precio, fecha del sorteo y tus datos para recibir transferencias. Toma dos minutos.", img: "1-crear", alt: "Formulario para crear una rifa con el nombre, los premios y el precio" },
+  { t: "Comparte el enlace", d: "Mándalo por WhatsApp o Instagram. Cada persona elige sus números en la grilla y los reserva sin crear cuenta.", img: "2-grilla", alt: "Grilla de números de una rifa con números vendidos, reservados y dos elegidos" },
+  { t: "Confirma los pagos", d: "Te transfieren directo a ti. Marcas quién pagó desde el panel; las reservas sin pagar se liberan solas.", img: "3-panel", alt: "Panel del organizador con números pagados, por confirmar, libres y lo recaudado" },
+  { t: "Sortea en vivo", d: "A la hora del cierre se sella la lista de números pagados y el ganador sale de un número aleatorio público.", img: "4-sorteo", alt: "Sorteo en vivo terminado con los números ganadores de tres premios" },
 ];
 
+// Íconos de línea de 24 px, dibujados con currentColor.
 const ventajas = [
-  { t: "Sorteo que se puede comprobar", d: "El azar sale de drand, un faro público de números aleatorios. La lista queda sellada antes y cualquiera puede repetir el cálculo." },
-  { t: "Reservas sin cuenta y con boleto", d: "Quien compra elige sus números, recibe un boleto con código y los datos para pagarte, y te avisa por WhatsApp." },
-  { t: "Control de pagos sin planillas", d: "Ves quién pagó, quién está pendiente y cuánto llevas. Nadie puede comprar dos veces el mismo número." },
-  { t: "El dinero va directo a ti", d: "Rifa Clara no toca la plata de tu rifa ni cobra comisión por venta. Hasta 100 números es gratis." },
-  { t: "Sorteo en vivo en pantalla completa", d: "Proyéctalo en el evento o transmítelo por Instagram: los números ganadores aparecen uno por uno." },
-  { t: "También en papel", d: "Descarga el talonario en PDF con colilla y QR para vender en persona, y lleva todo en un solo lugar." },
+  { t: "Sorteo que se puede comprobar", d: "El azar sale de drand, un faro público de números aleatorios. La lista queda sellada antes y cualquiera puede repetir el cálculo.", icono: '<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>' },
+  { t: "Reservas sin cuenta y con boleto", d: "Quien compra elige sus números, recibe un boleto con código y los datos para pagarte, y te avisa por WhatsApp.", icono: '<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M14 6v2M14 11v2M14 16v2"/>' },
+  { t: "Control de pagos sin planillas", d: "Ves quién pagó, quién está pendiente y cuánto llevas. Nadie puede comprar dos veces el mismo número.", icono: '<path d="M8 5H6a1 1 0 00-1 1v14a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1h-2"/><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>' },
+  { t: "El dinero va directo a ti", d: "Rifa Clara no toca la plata de tu rifa ni cobra comisión por venta. Hasta 100 números es gratis.", icono: '<path d="M4 7h15a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1z"/><path d="M4 7V6a2 2 0 012-2h11"/><circle cx="16" cy="13" r="1.2"/>' },
+  { t: "Sorteo en vivo en pantalla completa", d: "Proyéctalo en el evento o transmítelo por Instagram: los números ganadores aparecen uno por uno.", icono: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4M10.5 7.5v5l4-2.5z"/>' },
+  { t: "También en papel", d: "Descarga el talonario en PDF con colilla y QR para vender en persona, y lleva todo en un solo lugar.", icono: '<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="7" rx="1.5"/><path d="M7 14h10v7H7z"/>' },
 ];
 
 const comparacion = [
@@ -110,26 +98,7 @@ const jsonLd = [
       </div>
     </div>
 
-    <figure class="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgb(0_0_0/.05),0_18px_40px_rgb(10_40_35/.10)]">
-      <div class="grid gap-2.5 border-b border-line p-4 sm:p-5">
-        <div class="flex justify-between gap-3 text-xs text-muted"><span>Bomberos 3ª Compañía · ejemplo</span><span>Cierra en 5 d 22 h</span></div>
-        <div class="flex items-center justify-between gap-3">
-          <span class="font-display text-lg leading-tight font-bold sm:text-xl">Rifa a beneficio: TV 55" + canasta familiar</span>
-          <span class="font-mono text-lg font-semibold whitespace-nowrap">$2.000</span>
-        </div>
-        <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full w-[63%] rounded-full bg-ok"></b></div>
-        <div class="flex justify-between text-xs text-muted"><span>63 de 100 vendidos</span><span>Tus números: 07 · 47</span></div>
-      </div>
-      <div class="grid grid-cols-10 gap-1 p-4 sm:gap-1.5 sm:p-5" role="img" aria-label="Ejemplo de grilla de números de una rifa: vendidos, reservados, libres y los elegidos">
-        {numeros.map(({ n, estado }) => (
-          <span class:list={["grid aspect-[1.15] place-items-center rounded-md border font-mono text-[11px] sm:text-xs", clases[estado]]}>{n}</span>
-        ))}
-      </div>
-      <figcaption class="mx-4 mb-4 grid gap-1 rounded-lg border border-line bg-bg px-3 py-2.5 sm:mx-5">
-        <span class="text-xs font-semibold text-ok">✓ Lista sellada · sorteo 20 sep, 20:05</span>
-        <span class="font-mono text-[11px] break-words text-muted">huella 9f3c…e71a · ronda 32380712 · quicknet</span>
-      </figcaption>
-    </figure>
+    <RifaEjemplo />
   </section>
 
   <section id="como-funciona" class="grid scroll-mt-6 gap-6 border-t border-line py-14">
@@ -138,11 +107,14 @@ const jsonLd = [
       <p class="max-w-[60ch] text-muted">Sin talonarios perdidos ni planillas de Excel: todo queda en un solo enlace.</p>
     </div>
     <ol class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {pasos.map(({ t, d }, i) => (
-        <li class="grid content-start gap-2 rounded-2xl border border-line bg-surface p-5">
-          <span class="font-mono text-sm font-semibold text-accent">Paso {i + 1}</span>
-          <h3 class="text-lg font-semibold">{t}</h3>
-          <p class="text-sm leading-relaxed text-muted">{d}</p>
+      {pasos.map(({ t, d, img, alt }, i) => (
+        <li class="grid content-start gap-3 rounded-2xl border border-line bg-surface p-4">
+          <div class="overflow-hidden rounded-[22px] border-4 border-ink/85 bg-bg shadow-[0_12px_30px_rgb(10_40_35/.14)]">
+            <img src={`/img/portada/${img}.webp`} alt={alt} width="390" height="720" loading="lazy" decoding="async" class="block h-auto w-full" />
+          </div>
+          <span class="px-1 font-mono text-sm font-semibold text-accent">Paso {i + 1}</span>
+          <h3 class="px-1 text-lg font-semibold">{t}</h3>
+          <p class="px-1 text-sm leading-relaxed text-muted">{d}</p>
         </li>
       ))}
     </ol>
@@ -151,8 +123,11 @@ const jsonLd = [
   <section class="grid gap-6 py-6">
     <h2 class="text-3xl font-semibold tracking-tight">Todo lo que tu rifa necesita</h2>
     <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {ventajas.map(({ t, d }) => (
+      {ventajas.map(({ t, d, icono }) => (
         <li class="grid content-start gap-2 rounded-2xl bg-salvia p-5">
+          <span class="grid size-11 place-items-center rounded-xl bg-surface text-accent" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="size-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={icono} />
+          </span>
           <h3 class="text-lg font-semibold">{t}</h3>
           <p class="text-sm leading-relaxed text-muted">{d}</p>
         </li>

@@ -1,0 +1,105 @@
+---
+// Tarjeta de ejemplo del inicio: una rifa inventada que va rotando entre
+// premios típicos de rifas chilenas. El primer premio queda en el HTML (lo que
+// ve Google y quien no tiene JavaScript); el resto rota en el navegador.
+const ejemplos = [
+  { org: "Bomberos 3ª Compañía", premio: "TV 55\" + canasta familiar", precio: "$2.000", vendidos: 63, cierre: "5 d 22 h", icono: "tv" },
+  { org: "Club Deportivo Los Aromos", premio: "Bicicleta aro 29", precio: "$1.500", vendidos: 48, cierre: "3 d 4 h", icono: "bici" },
+  { org: "Centro de Padres Colegio San José", premio: "Freidora de aire + gift card", precio: "$1.000", vendidos: 71, cierre: "6 d 1 h", icono: "freidora" },
+  { org: "4º medio B · viaje de estudios", premio: "Fin de semana en cabaña para 4", precio: "$3.000", vendidos: 55, cierre: "9 d 12 h", icono: "cabana" },
+  { org: "Club de Rayuela El Esfuerzo", premio: "Parrilla a gas + canasta de carnes", precio: "$2.000", vendidos: 82, cierre: "1 d 8 h", icono: "parrilla" },
+  { org: "Fundación Patitas", premio: "Gift card $100.000 en supermercado", precio: "$2.500", vendidos: 37, cierre: "12 d 5 h", icono: "regalo" },
+];
+// Íconos de línea de 24 px; se dibujan con currentColor.
+const iconos: Record<string, string> = {
+  tv: '<rect x="2.5" y="4" width="19" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  bici: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8h-2M12.5 16L15 8"/>',
+  freidora: '<rect x="5" y="3" width="14" height="18" rx="3"/><rect x="8" y="11" width="8" height="6" rx="1"/><path d="M9 7h6"/>',
+  cabana: '<path d="M3 11l9-7 9 7M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  parrilla: '<path d="M4 9h16a8 8 0 01-16 0zM8 17l-2 4M16 17l2 4M9 5c0-1 1-1 1-2M13 5c0-1 1-1 1-2"/>',
+  regalo: '<rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-4-6-1s6 1 6 1c2-4 6-4 6-1s-6 1-6 1"/>',
+};
+
+// Qué casillas aparecen vendidas según el porcentaje (patrón fijo para que no salte).
+const orden = Array.from({ length: 50 }, (_, i) => (i * 37) % 50);
+function estados(vendidos: number) {
+  const cuantos = Math.round((vendidos / 100) * 50);
+  const vendidas = new Set(orden.slice(0, cuantos));
+  const reservadas = new Set(orden.slice(cuantos, cuantos + 3));
+  return Array.from({ length: 50 }, (_, n) => (n === 7 || n === 47 ? "elegido" : vendidas.has(n) ? "vendido" : reservadas.has(n) ? "reservado" : "libre"));
+}
+const clases: Record<string, string> = {
+  libre: "border-line bg-surface text-ink",
+  vendido: "border-transparent bg-sold text-sold-ink",
+  reservado: "border-dashed border-muted text-muted",
+  elegido: "border-pick bg-pick font-semibold text-pick-ink",
+};
+const primero = ejemplos[0]!;
+const casilla = "grid aspect-[1.15] place-items-center rounded-md border font-mono text-[11px] transition-colors duration-500 sm:text-xs";
+---
+<figure data-rifa-ejemplo data-ejemplos={JSON.stringify(ejemplos.map((e) => ({ ...e, estados: estados(e.vendidos), icono: iconos[e.icono] })))} data-clases={JSON.stringify(clases)} data-casilla-base={casilla}
+  class="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgb(0_0_0/.05),0_18px_40px_rgb(10_40_35/.10)]">
+  <div class="grid gap-2.5 border-b border-line p-4 sm:p-5">
+    <div class="flex justify-between gap-3 text-xs text-muted"><span data-e="org">{primero.org} · ejemplo</span><span>Cierra en <span data-e="cierre">{primero.cierre}</span></span></div>
+    <div class="cambia flex items-center gap-3">
+      <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-salvia text-accent" aria-hidden="true">
+        <svg data-e="icono" viewBox="0 0 24 24" class="size-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={iconos[primero.icono]} />
+      </span>
+      <span class="grid flex-1 gap-0.5">
+        <span class="text-xs text-muted">Rifa a beneficio</span>
+        <span data-e="premio" class="font-display text-lg leading-tight font-bold sm:text-xl">{primero.premio}</span>
+      </span>
+      <span data-e="precio" class="font-mono text-lg font-semibold whitespace-nowrap">{primero.precio}</span>
+    </div>
+    <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b data-e="barra" class="block h-full rounded-full bg-ok transition-[width] duration-700" style={`width:${primero.vendidos}%`}></b></div>
+    <div class="flex justify-between text-xs text-muted"><span><span data-e="vendidos">{primero.vendidos}</span> de 100 vendidos</span><span>Tus números: 07 · 47</span></div>
+  </div>
+  <div class="grid grid-cols-10 gap-1 p-4 sm:gap-1.5 sm:p-5" role="img" aria-label="Ejemplo de grilla de números de una rifa: vendidos, reservados, libres y los elegidos">
+    {estados(primero.vendidos).map((estado, n) => (
+      <span data-casilla class:list={[casilla, clases[estado]]}>{String(n).padStart(2, "0")}</span>
+    ))}
+  </div>
+  <figcaption class="mx-4 mb-4 grid gap-1 rounded-lg border border-line bg-bg px-3 py-2.5 sm:mx-5">
+    <span class="text-xs font-semibold text-ok">✓ Lista sellada al cierre · sorteo verificable</span>
+    <span class="font-mono text-[11px] break-words text-muted">huella 9f3c…e71a · ronda 32380712 · quicknet</span>
+  </figcaption>
+</figure>
+
+<style>
+  .cambia { transition: opacity 0.35s ease; }
+  .cambia.oculto { opacity: 0; }
+</style>
+
+<script>
+  const raiz = document.querySelector<HTMLElement>("[data-rifa-ejemplo]");
+  const reducir = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (raiz && !reducir) {
+    type Ejemplo = { org: string; premio: string; precio: string; vendidos: number; cierre: string; icono: string; estados: string[] };
+    const ejemplos = JSON.parse(raiz.dataset.ejemplos!) as Ejemplo[];
+    const clases = JSON.parse(raiz.dataset.clases!) as Record<string, string>;
+    const campo = (n: string) => raiz.querySelector<HTMLElement>(`[data-e="${n}"]`)!;
+    const bloque = raiz.querySelector<HTMLElement>(".cambia")!;
+    const casillas = [...raiz.querySelectorAll<HTMLElement>("[data-casilla]")];
+    const base = raiz.dataset.casillaBase!;
+    let i = 0;
+    let visible = true;
+    document.addEventListener("visibilitychange", () => (visible = !document.hidden));
+    setInterval(() => {
+      if (!visible) return;
+      i = (i + 1) % ejemplos.length;
+      const e = ejemplos[i]!;
+      bloque.classList.add("oculto");
+      setTimeout(() => {
+        campo("org").textContent = `${e.org} · ejemplo`;
+        campo("cierre").textContent = e.cierre;
+        campo("premio").textContent = e.premio;
+        campo("precio").textContent = e.precio;
+        campo("icono").innerHTML = e.icono;
+        campo("vendidos").textContent = String(e.vendidos);
+        campo("barra").style.width = `${e.vendidos}%`;
+        casillas.forEach((c, n) => (c.className = `${base} ${clases[e.estados[n]!]}`));
+        bloque.classList.remove("oculto");
+      }, 350);
+    }, 4000);
+  }
+</script>
