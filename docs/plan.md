@@ -39,16 +39,17 @@ v0.4 · 15 sep 2026. Este archivo es la fuente de verdad del plan.
 
 ## Cobro
 
-| Rifa                                            | Precio                         |
-| ----------------------------------------------- | ------------------------------ |
-| Hasta 100 números                               | Gratis, con anuncios           |
-| Hasta 100 números, sin anuncios + talonario PDF | $2.990, pago único (propuesta) |
-| Hasta 500 números                               | $4.990, pago único             |
-| Hasta 2.000 números                             | $11.990, pago único            |
+Implementado (fuente única: `shared/src/precios.ts`):
 
-- Se cobra con Flow en CLP. Antes, confirmar que Flow acepta software de rifas.
-- Club de Rifas usa el mismo modelo (pago único por rifa, sin comisión, 50 ventas gratis en la primera rifa), lo que valida el formato.
-- La rifa típica chilena es de 100 números ("rifa 100 números" está entre las búsquedas más frecuentes). Por eso el tramo gratis cubre el caso común, y el tramo de $2.990 existe para cobrarle algo a ese caso.
+| Rifa | Precio |
+|---|---|
+| Hasta 100 números | Gratis |
+| De 101 a 500 | $4.990, pago único |
+| De 501 a 2.000 | $11.990, pago único |
+
+- Se cobra con Flow en CLP (Webpay, tarjetas, transferencia), credenciales de producción. La rifa queda en `pago_pendiente` y se publica sola cuando Flow confirma el pago; la API siempre consulta `payment/getStatus` y valida el monto.
+- Competencia (sep 2026): Club de Rifas cobra en USD 2,50 por 100 números, USD 12 por 500 y USD 33 por 2.000, con 50 gratis; Rifalo cobra 5 % de lo vendido; SimpleRifa, $141.200 al año. Quedamos a menos de la mitad de Club de Rifas y con el doble de tramo gratis.
+- Sin encuesta de precio: el cobro real es la validación.
 
 ## Legal en Chile
 

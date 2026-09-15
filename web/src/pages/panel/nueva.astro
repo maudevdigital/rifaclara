@@ -16,7 +16,7 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
     <div class="grid gap-1">
       <a href="/panel" class="text-sm text-muted hover:text-ink">← Mis rifas</a>
       <h1 class="text-4xl font-semibold tracking-tight">Crear rifa</h1>
-      <p class="text-muted">Gratis hasta 100 números. Puedes publicar ahora y compartir el enlace al tiro.</p>
+      <p class="text-muted">Gratis hasta 100 números. Las más grandes tienen un pago único, sin comisión: <a class="text-accent underline" href="/precios">ver precios</a>.</p>
     </div>
 
     <form data-nueva-rifa class="grid gap-5" novalidate>
@@ -44,7 +44,7 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
         <h2 class="text-lg font-semibold">2. Números y precio</h2>
         <div class="grid gap-4 sm:grid-cols-3">
           <label class={etiqueta} for="rifa-desde">Desde<input id="rifa-desde" name="desde" type="number" inputmode="numeric" min="0" value="1" class={campo} /></label>
-          <label class={etiqueta} for="rifa-hasta">Hasta<input id="rifa-hasta" name="hasta" type="number" inputmode="numeric" min="1" value="100" class={campo} /></label>
+          <label class={etiqueta} for="rifa-hasta">Hasta<input id="rifa-hasta" name="hasta" type="number" inputmode="numeric" min="1" max="2000" value="100" class={campo} /></label>
           <label class={etiqueta} for="rifa-precio">Precio por número ($)<input id="rifa-precio" name="precio" type="number" inputmode="numeric" min="100" step="100" value="2000" class={campo} /></label>
         </div>
         <p data-calculo class="rounded-lg bg-pick/25 px-3 py-2 text-sm"></p>
@@ -94,6 +94,7 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
 </Base>
 
 <script>
+  import { tramoPara } from "@rifaclara/shared";
   const form = document.querySelector<HTMLFormElement>("[data-nueva-rifa]")!;
   const mensaje = form.querySelector<HTMLElement>("[data-mensaje]")!;
   const boton = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
@@ -111,9 +112,12 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
   function recalcular() {
     const total = Number(campo("hasta").value) - Number(campo("desde").value) + 1;
     const precio = Number(campo("precio").value);
+    const tramo = tramoPara(total);
     calculo.textContent = total > 0 && precio > 0
-      ? `${total} números × ${clp.format(precio)} = ${clp.format(total * precio)} si vendes todo.`
+      ? `${total} números × ${clp.format(precio)} = ${clp.format(total * precio)} si vendes todo. ` +
+        (!tramo ? "El máximo es 2.000 números." : tramo.precio === 0 ? "Publicarla es gratis." : `Publicarla cuesta ${clp.format(tramo.precio)}, pago único y sin comisión.`)
       : "Revisa los números y el precio.";
+    boton.textContent = tramo && tramo.precio > 0 ? `Crear rifa y pagar ${clp.format(tramo.precio)}` : "Publicar rifa";
   }
   ["desde", "hasta", "precio"].forEach((n) => campo(n).addEventListener("input", recalcular));
   recalcular();
@@ -150,7 +154,7 @@ const bloque = "grid gap-4 rounded-2xl border border-line bg-surface p-5";
       const r = await res.json().catch(() => ({}));
       if (res.status === 401) { location.href = "/ingresar"; return; }
       if (!res.ok) throw new Error(r.error ?? "No se pudo publicar");
-      location.href = `/r/${r.slug}?nueva=1`;
+      location.href = r.requierePago ? `/panel/rifas/${r.id}` : `/r/${r.slug}?nueva=1`;
     } catch (err) {
       mensaje.className = "min-h-5 text-sm text-danger";
       mensaje.textContent = (err as Error).message;

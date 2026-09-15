@@ -14,6 +14,7 @@ if (!yo.datos) return Astro.redirect("/ingresar");
 const { datos } = await apiServidor<{ rifas: ResumenRifa[] }>(Astro.request, "/api/rifas");
 const lista = datos?.rifas ?? [];
 const etiquetas: Record<string, [string, string]> = {
+  pago_pendiente: ["Falta pagar", "bg-pick text-pick-ink"],
   abierta: ["Abierta", "bg-ok-soft text-ok"],
   cerrada: ["Cerrada", "bg-salvia text-ink"],
   sorteada: ["Sorteada", "bg-pick text-pick-ink"],

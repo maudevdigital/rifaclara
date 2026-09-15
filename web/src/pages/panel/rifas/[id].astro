@@ -3,6 +3,7 @@ import Base from "../../../layouts/Base.astro";
 import { apiServidor } from "../../../lib/api-servidor";
 import { fechaChile, pesos } from "../../../lib/formato";
 import { nombrePremio } from "../../../lib/sorteo-remoto";
+import { tramoPara } from "@rifaclara/shared";
 
 export const prerender = false;
 
@@ -32,6 +33,14 @@ const etiqueta = {
   vencida: ["Vencida", "bg-salvia text-muted"],
   liberada: ["Liberada", "bg-salvia text-muted"],
 } as const;
+const tramo = r ? tramoPara(total) : null;
+const pago = Astro.url.searchParams.get("pago");
+const avisosPago: Record<string, [string, string]> = {
+  pagado: ["¡Pago recibido! Tu rifa ya está publicada.", "bg-ok-soft text-ok"],
+  pendiente: ["Flow todavía no confirma el pago. Recarga esta página en un minuto.", "bg-pick text-pick-ink"],
+  rechazado: ["El pago fue rechazado. Puedes intentarlo de nuevo.", "bg-salvia text-danger"],
+  anulado: ["El pago se anuló. Puedes intentarlo de nuevo.", "bg-salvia text-danger"],
+};
 const hora = (s: number) => new Intl.DateTimeFormat("es-CL", { timeZone: r?.zonaHoraria ?? "America/Santiago", dateStyle: "short", timeStyle: "short" }).format(s * 1000);
 const whatsapp = (x: Reserva) =>
   `https://wa.me/${x.telefono}?text=${encodeURIComponent(`Hola ${x.nombre}, te escribo por tu reserva ${x.codigo} (números ${x.numeros.join(", ")}) en "${r?.titulo}".`)}`;
@@ -46,7 +55,19 @@ const whatsapp = (x: Reserva) =>
         <p class="text-sm text-muted">Cierra el {fechaChile(r.cierreEn, r.zonaHoraria)} · <a class="text-accent underline" href={`/r/${r.slug}`}>ver página pública</a></p>
       </div>
 
-      {r.estado !== "abierta" && (
+      {pago && avisosPago[pago] && (
+        <p class:list={["rounded-xl px-4 py-3 text-sm font-semibold", avisosPago[pago][1]]}>{avisosPago[pago][0]}</p>
+      )}
+      {r.estado === "pago_pendiente" && tramo && (
+        <div class="grid gap-3 rounded-2xl bg-pick p-5 text-pick-ink sm:p-6">
+          <b class="font-display text-xl">Tu rifa está lista. Falta el pago para publicarla.</b>
+          <p class="max-w-[62ch]">Una rifa de {total.toLocaleString("es-CL")} números tiene un pago único de <b>{pesos(tramo.precio)}</b>. Sin comisión sobre lo que vendas: el dinero de los números va directo a ti.</p>
+          <button data-pagar={r.id} type="button" class="justify-self-start rounded-xl bg-ink px-6 py-3 font-semibold text-bg hover:brightness-110 disabled:opacity-60">Pagar {pesos(tramo.precio)} con Flow</button>
+          <p class="text-xs">Webpay, tarjetas y transferencia. Al confirmarse el pago, la rifa se publica sola.</p>
+          <p data-mensaje-pago aria-live="polite" class="min-h-5 text-sm font-semibold"></p>
+        </div>
+      )}
+      {r.estado !== "abierta" && r.estado !== "pago_pendiente" && (
         <div class="grid gap-3 rounded-2xl border border-line bg-surface p-5">
           {datos!.ganadores.length ? (
             <>
@@ -116,6 +137,17 @@ const whatsapp = (x: Reserva) =>
 </Base>
 
 <script>
+  const pagar = document.querySelector<HTMLButtonElement>("[data-pagar]");
+  pagar?.addEventListener("click", async () => {
+    const salida = document.querySelector<HTMLElement>("[data-mensaje-pago]")!;
+    pagar.disabled = true;
+    salida.textContent = "Abriendo Flow…";
+    const res = await fetch(`/api/pagos/rifa/${pagar.dataset.pagar}`, { method: "POST" });
+    const datos = await res.json().catch(() => ({}));
+    if (res.ok && datos.url) { location.href = datos.url; return; }
+    salida.textContent = datos.error ?? "No se pudo iniciar el pago. Intenta de nuevo.";
+    pagar.disabled = false;
+  });
   const mensaje = document.querySelector<HTMLElement>("[data-mensaje]");
   document.querySelectorAll<HTMLButtonElement>("[data-accion]").forEach((b) => {
     b.addEventListener("click", async () => {

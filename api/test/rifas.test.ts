@@ -24,8 +24,10 @@ describe("nueva rifa", () => {
     expect(r.maxPorPersona).toBe(10);
   });
 
-  it("aplica los límites del plan gratuito", () => {
-    expect(error({ ...valida, hasta: 150 })).toMatch(/hasta 100/);
+  it("acepta de 10 a 2.000 números (más de 100 se pagan aparte)", () => {
+    expect(esquemaNuevaRifa.safeParse({ ...valida, hasta: 150 }).success).toBe(true);
+    expect(esquemaNuevaRifa.safeParse({ ...valida, hasta: 2000 }).success).toBe(true);
+    expect(error({ ...valida, hasta: 2001 })).toMatch(/hasta 2.000/);
     expect(error({ ...valida, desde: 1, hasta: 5 })).toMatch(/al menos 10/);
     expect(error({ ...valida, desde: 50, hasta: 10 })).toMatch(/mayor que/);
     expect(esquemaNuevaRifa.safeParse({ ...valida, desde: 0, hasta: 99 }).success).toBe(true);

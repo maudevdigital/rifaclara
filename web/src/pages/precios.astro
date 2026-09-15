@@ -1,0 +1,63 @@
+---
+import { TRAMOS } from "@rifaclara/shared";
+import Base from "../layouts/Base.astro";
+import { pesos } from "../lib/formato";
+
+// El precio más bajo de pago sale de la tabla, para no repetir montos a mano.
+const desde = pesos(TRAMOS.find((t) => t.precio > 0)!.precio);
+const preguntas = [
+  { p: "¿Cobran comisión por los números que vendo?", r: "No. El dinero de los números va directo a tu cuenta: los participantes te transfieren a ti. Rifa Clara cobra solo el pago único de la rifa, y hasta 100 números es gratis." },
+  { p: "¿Cuándo se paga?", r: "Al crear una rifa de más de 100 números. Queda lista pero sin publicar hasta que se confirme el pago; en ese momento se publica sola." },
+  { p: "¿Cómo se paga?", r: "Con Flow: Webpay, tarjetas de débito y crédito o transferencia." },
+  { p: "¿Qué incluye?", r: "Todo: página de la rifa, grilla de números, reservas, boletos, panel de pagos, cierre automático y sorteo verificable en vivo. El precio solo cambia según la cantidad de números." },
+];
+const faq = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: preguntas.map(({ p, r }) => ({ "@type": "Question", name: p, acceptedAnswer: { "@type": "Answer", text: r } })),
+};
+---
+<Base
+  title="Precios: rifa online gratis hasta 100 números | Rifa Clara"
+  description={`Crea tu rifa online gratis hasta 100 números. Rifas más grandes con un pago único desde ${desde}, sin comisión sobre lo que vendes.`}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(faq)} />
+  <section class="grid gap-3 pt-4 pb-8">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Precios</h1>
+    <p class="max-w-[60ch] text-lg text-muted">Gratis hasta 100 números. Las rifas más grandes pagan una sola vez, según su tamaño. Sin comisión, sin suscripción.</p>
+  </section>
+
+  <ul class="grid gap-3 sm:grid-cols-3">
+    {TRAMOS.map((t, i) => (
+      <li class:list={["grid content-start gap-2 rounded-2xl border p-5", i === 0 ? "border-accent bg-surface" : "border-line bg-surface"]}>
+        <span class="text-sm text-muted">{i === 0 ? "Hasta" : `De ${(TRAMOS[i - 1]!.hasta + 1).toLocaleString("es-CL")} a`} {t.hasta.toLocaleString("es-CL")} números</span>
+        <b class="font-mono text-3xl">{t.precio === 0 ? "Gratis" : pesos(t.precio)}</b>
+        <span class="text-xs text-muted">{t.precio === 0 ? "para siempre" : "pago único por rifa"}</span>
+      </li>
+    ))}
+  </ul>
+
+  <section class="mt-10 grid gap-3 rounded-2xl bg-salvia p-6">
+    <h2 class="text-xl font-semibold">Todas las rifas incluyen</h2>
+    <ul class="grid list-disc gap-1.5 pl-5 text-muted marker:text-accent sm:grid-cols-2">
+      <li>Página de la rifa para compartir por WhatsApp</li>
+      <li>Grilla de números y reservas sin cuenta</li>
+      <li>Boleto con tus datos de pago</li>
+      <li>Panel para confirmar pagos</li>
+      <li>Vencimiento automático de reservas</li>
+      <li>Sorteo verificable en vivo al cierre</li>
+    </ul>
+  </section>
+
+  <section class="mt-14 grid max-w-3xl gap-4">
+    <h2 class="text-2xl font-semibold">Preguntas frecuentes</h2>
+    <div class="grid gap-2">
+      {preguntas.map(({ p, r }) => (
+        <details class="rounded-xl border border-line bg-surface px-4 py-3">
+          <summary class="cursor-pointer font-semibold marker:text-accent">{p}</summary>
+          <p class="pt-2 leading-relaxed text-muted">{r}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+</Base>

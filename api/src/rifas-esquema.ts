@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { MAX_NUMEROS_RIFA } from "@rifaclara/shared";
 
 export const MIN_NUMEROS = 10;
-export const MAX_NUMEROS_GRATIS = 100;
 
 const telefono = z
   .string()
@@ -31,7 +31,7 @@ export const esquemaNuevaRifa = z
     const total = d.hasta - d.desde + 1;
     if (d.hasta <= d.desde) problema("“Hasta” tiene que ser mayor que “desde”");
     else if (total < MIN_NUMEROS) problema(`La rifa debe tener al menos ${MIN_NUMEROS} números`);
-    else if (total > MAX_NUMEROS_GRATIS) problema(`Por ahora las rifas llegan hasta ${MAX_NUMEROS_GRATIS} números`);
+    else if (total > MAX_NUMEROS_RIFA) problema(`Las rifas pueden tener hasta ${MAX_NUMEROS_RIFA.toLocaleString("es-CL")} números`);
     else if (d.premios.length >= total) problema("Tiene que haber más números que premios");
     const ahora = Date.now() / 1000;
     if (d.cierreEn < ahora + 3600) problema("El cierre tiene que ser al menos en una hora más");

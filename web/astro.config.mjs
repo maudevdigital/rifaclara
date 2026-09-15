@@ -12,6 +12,10 @@ export default defineConfig({
   // Las páginas estáticas no usan bindings: prerenderizar con Node evita
   // depender de un workerd local, que en Windows a veces no levanta.
   adapter: cloudflare({ prerenderEnvironment: "node" }),
+  // Flow devuelve al organizador con un formulario POST desde flow.cl, que la
+  // protección de Astro bloquearía. La API ya valida el origen en las
+  // peticiones con sesión, y los pagos se confirman consultando a Flow.
+  security: { checkOrigin: false },
   vite: { plugins: [tailwindcss()] },
   // Fuera del sitemap: la portada provisoria, el ingreso y el panel (todas noindex).
   integrations: [
