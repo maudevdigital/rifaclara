@@ -1,0 +1,107 @@
+---
+import Base from "../layouts/Base.astro";
+import Ruleta from "../components/Ruleta.astro";
+
+const url = new URL("/ruleta", Astro.site).href;
+const preguntas = [
+  {
+    p: "¿La ruleta es realmente aleatoria?",
+    r: "Sí. En modo rápido usa el generador criptográfico de tu navegador, el mismo que se usa para crear contraseñas. En modo verificable el resultado sale de drand, un número aleatorio público que nadie conoce antes, ni siquiera nosotros.",
+  },
+  {
+    p: "¿Cuántos nombres puedo poner?",
+    r: "Hasta 500. Con más de 90 la rueda deja de mostrar los textos para que se siga leyendo, pero el sorteo funciona igual y el ganador aparece al final del giro.",
+  },
+  {
+    p: "¿Se guardan mis nombres en algún servidor?",
+    r: "No. La lista se guarda solo en tu navegador para que no la pierdas al recargar. En modo verificable únicamente se consulta el número público de drand; tu lista no sale de tu equipo.",
+  },
+  {
+    p: "¿Puedo usarla para sortear una rifa?",
+    r: "Sí, para rifas pequeñas: escribe los números vendidos o los nombres de quienes compraron y usa el modo verificable. Para vender números, controlar pagos y publicar la lista antes del sorteo, pronto podrás crear tu rifa completa en Rifa Clara.",
+  },
+  {
+    p: "¿Qué hago si el nombre está dos veces?",
+    r: "Cada línea es una opción. Si alguien compró dos números, escribirlo dos veces le da el doble de probabilidades, igual que en una rifa con talonario.",
+  },
+];
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Ruleta online · Rifa Clara",
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    inLanguage: "es-CL",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "CLP" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: preguntas.map(({ p, r }) => ({ "@type": "Question", name: p, acceptedAnswer: { "@type": "Answer", text: r } })),
+  },
+];
+---
+<Base
+  title="Ruleta online gratis para sortear nombres | Rifa Clara"
+  description="Ruleta online gratis: escribe nombres u opciones, gira y elige un ganador al azar. Con modo verificable para sorteos en vivo. Sin registro."
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <section class="grid gap-3 pt-4 pb-6">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Ruleta online</h1>
+    <p class="max-w-[60ch] text-lg text-muted">Escribe los nombres, gira y listo. Gratis, sin registro y con un modo verificable para sorteos que tienen que ser limpios.</p>
+  </section>
+
+  <Ruleta />
+
+  <div class="mt-20 grid max-w-3xl gap-14">
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Cómo usar la ruleta</h2>
+      <ol class="grid gap-3 pl-5 text-muted marker:font-mono marker:text-accent [&_b]:text-ink list-decimal">
+        <li><b>Escribe los nombres</b> en la lista, uno por línea. También sirven números, premios o tareas.</li>
+        <li><b>Elige el modo.</b> Rápido para decidir algo al tiro; verificable si alguien va a preguntar si el sorteo fue limpio.</li>
+        <li><b>Gira la ruleta</b> con el botón o haciendo clic en la rueda. Puedes quitar al ganador y volver a girar para sacar varios.</li>
+      </ol>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Modo verificable: un giro que se puede comprobar</h2>
+      <p class="leading-relaxed text-muted">La mayoría de las ruletas online te piden confiar. Esta te deja comprobar. Al girar en modo verificable pasan tres cosas:</p>
+      <ul class="grid gap-3 pl-5 text-muted marker:text-accent [&_b]:text-ink list-disc">
+        <li><b>Se sella la lista.</b> Se calcula la huella SHA-256 de los nombres en el orden en que están.</li>
+        <li><b>Se fija una ronda futura de drand.</b> drand es un faro público de números aleatorios que mantienen Cloudflare, universidades y otras organizaciones, y emite un número nuevo cada 3 segundos. La ronda se elige antes de que exista, así que nadie puede saber qué va a salir.</li>
+        <li><b>El ganador sale de un cálculo público:</b> <code class="rounded bg-salvia px-1 font-mono text-sm text-ink">sha256(azar:ruleta:huella:0) mod cantidad</code>. Con el comprobante, cualquiera puede repetir el cálculo y llegar al mismo nombre.</li>
+      </ul>
+      <p class="leading-relaxed text-muted">Úsalo para sorteos en Instagram, rifas pequeñas o transmisiones en vivo: el botón de pantalla completa deja la ruleta lista para proyectar.</p>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Para qué sirve</h2>
+      <ul class="grid gap-2 sm:grid-cols-2 [&_li]:rounded-xl [&_li]:border [&_li]:border-line [&_li]:bg-surface [&_li]:p-4 [&_b]:block [&_b]:text-ink text-sm text-muted">
+        <li><b>Sorteos en redes sociales</b>Pega los nombres de quienes comentaron y gira en vivo.</li>
+        <li><b>Rifas pequeñas</b>Escribe los números vendidos y sortea con modo verificable.</li>
+        <li><b>Turnos y tareas</b>Quién presenta primero, quién lava la loza, quién elige la película.</li>
+        <li><b>Salas de clases</b>Elegir estudiantes o temas sin favoritismos.</li>
+      </ul>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="text-2xl font-semibold">Preguntas frecuentes</h2>
+      <div class="grid gap-2">
+        {preguntas.map(({ p, r }) => (
+          <details class="group rounded-xl border border-line bg-surface px-4 py-3">
+            <summary class="cursor-pointer font-semibold marker:text-accent">{p}</summary>
+            <p class="pt-2 leading-relaxed text-muted">{r}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="grid gap-3 rounded-2xl bg-accent p-6 text-accent-ink sm:p-8">
+      <h2 class="text-2xl font-semibold">¿Organizas una rifa con números?</h2>
+      <p class="max-w-[56ch] opacity-90">Muy pronto podrás crearla en Rifa Clara: grilla de números, control de pagos, boletos para cada participante y el mismo sorteo verificable. Gratis hasta 100 números.</p>
+    </section>
+  </div>
+</Base>

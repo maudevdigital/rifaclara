@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://rifaclara.maudev.cl/sitemap-index.xml

@@ -25,11 +25,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+    <slot name="head" />
   </head>
   <body class="min-h-dvh">
     <header class="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
       <Logo />
-      <nav class="flex items-center gap-6 text-sm text-muted" aria-label="Principal">
+      <nav class="flex items-center gap-5 text-sm text-muted" aria-label="Principal">
+        <a class="hover:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink" href="/ruleta" aria-current={Astro.url.pathname.startsWith("/ruleta") ? "page" : undefined}>Ruleta</a>
         <a class="rounded-lg bg-accent px-4 py-2.5 font-semibold text-accent-ink hover:brightness-110" href="/#pronto">Muy pronto</a>
       </nav>
     </header>
