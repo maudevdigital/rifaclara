@@ -4,6 +4,7 @@ import { auth, conSesion, limpiarAuth, type Entorno } from "./auth";
 import { borrarAntiguos, sorteos } from "./sorteos";
 import { listaEspera } from "./lista-espera";
 import { rifas } from "./rifas";
+import { reservas, vencerReservas } from "./reservas";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
@@ -26,6 +27,7 @@ app.get("/yo", (c) => {
 
 app.route("/auth", auth);
 app.route("/rifas", rifas);
+app.route("/reservas", reservas);
 app.route("/sorteos", sorteos);
 app.route("/lista-espera", listaEspera);
 
@@ -37,7 +39,9 @@ app.onError((e, c) => {
 
 export default {
   fetch: app.fetch,
-  async scheduled(_evento, env, ctx) {
-    ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));
+  async scheduled(evento, env, ctx) {
+    // Cada 10 minutos se vencen reservas sin pagar; una vez al día, limpieza.
+    if (evento.cron === "*/10 * * * *") ctx.waitUntil(vencerReservas(env.DB));
+    else ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));
   },
 } satisfies ExportedHandler<CloudflareBindings>;

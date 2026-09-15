@@ -22,6 +22,7 @@ const pagados = r?.tomados.filter((t) => t.e === "p").length ?? 0;
 const reservados = r?.tomados.filter((t) => t.e === "r").length ?? 0;
 const titulo = r ? (/^rifa\b/i.test(r.titulo) ? r.titulo : `Rifa ${r.titulo}`) : "Rifa no encontrada";
 const nueva = Astro.url.searchParams.has("nueva");
+const abierta = r?.estado === "abierta" && Date.now() / 1000 < r.cierreEn;
 const clases = {
   libre: "border-line bg-surface text-ink",
   r: "border-dashed border-muted text-muted",
@@ -71,20 +72,53 @@ const clases = {
           <p class="text-sm text-muted">El sorteo es el <b class="text-ink">{fechaChile(r.cierreEn, r.zonaHoraria)}</b> (hora de Chile), con un número aleatorio público que cualquiera puede verificar.</p>
         </div>
 
-        <div class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
+        <div data-rifa data-slug={r.slug} data-precio={r.precio} data-maximo={r.maxPorPersona} class="grid gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
           <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full rounded-full bg-ok" style={`width:${(pagados / numeros.length) * 100}%`}></b></div>
           <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
             <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-line align-middle"></i>Libre</span>
+            <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-pick align-middle"></i>Tu elección</span>
             <span><i class="mr-1 inline-block size-2.5 rounded-sm border border-dashed border-muted align-middle"></i>Reservado ({reservados})</span>
             <span><i class="mr-1 inline-block size-2.5 rounded-sm bg-sold align-middle"></i>Vendido ({pagados})</span>
           </div>
+          {abierta && <p class="text-sm text-muted">Toca los números que quieres. Puedes elegir hasta {r.maxPorPersona}.</p>}
           <div class="grid grid-cols-10 gap-1 sm:gap-1.5" aria-label="Números de la rifa">
             {numeros.map((n) => {
               const e = estados.get(n);
-              return <span class:list={["grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs", clases[e ?? "libre"]]}>{n}</span>;
+              const base = "grid aspect-square place-items-center rounded-md border font-mono text-[11px] sm:text-xs";
+              return abierta && !e ? (
+                <button type="button" data-numero={n} aria-pressed="false" data-clase-tomado={`${base} ${clases.r}`}
+                  class={`${base} ${clases.libre} cursor-pointer hover:border-accent aria-pressed:border-pick aria-pressed:bg-pick aria-pressed:font-semibold aria-pressed:text-pick-ink`}>{n}</button>
+              ) : (
+                <span class:list={[base, clases[e ?? "libre"]]} aria-label={`${n}, ${e === "p" ? "vendido" : e === "r" ? "reservado" : "no disponible"}`}>{n}</span>
+              );
             })}
           </div>
-          <p class="rounded-lg bg-salvia px-3 py-2 text-sm">Muy pronto podrás elegir tus números y reservarlos aquí mismo.</p>
+          <p data-aviso hidden class="text-sm text-danger"></p>
+
+          {abierta ? (
+            <>
+              <div data-barra hidden class="sticky bottom-3 z-10 grid gap-2 rounded-xl bg-ink p-3 text-bg shadow-lg sm:flex sm:items-center sm:justify-between">
+                <span data-resumen class="font-mono text-sm"></span>
+                <button data-continuar type="button" class="rounded-lg bg-pick px-4 py-2.5 text-sm font-semibold text-pick-ink">Reservar</button>
+              </div>
+              <form data-reservar hidden class="grid gap-3 rounded-xl border border-line bg-bg p-4" novalidate>
+                <b>Tus datos</b>
+                <label class="grid gap-1 text-sm font-medium" for="reserva-nombre">Nombre y apellido
+                  <input id="reserva-nombre" name="nombre" autocomplete="name" required maxlength="60" class="rounded-lg border border-line bg-surface px-3 py-2.5 text-ink focus:border-accent focus:outline-none" />
+                </label>
+                <label class="grid gap-1 text-sm font-medium" for="reserva-telefono">WhatsApp
+                  <input id="reserva-telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+56 9 1234 5678" class="rounded-lg border border-line bg-surface px-3 py-2.5 text-ink focus:border-accent focus:outline-none" />
+                </label>
+                <div class="absolute -left-[9999px]" aria-hidden="true"><label for="reserva-sitio">Sitio</label><input id="reserva-sitio" name="sitio" tabindex="-1" autocomplete="off" /></div>
+                <p class="text-xs text-muted">Tus números quedan reservados {r.horasReserva} horas mientras pagas. Solo quien organiza ve tu teléfono.</p>
+                <button type="submit" class="justify-self-start rounded-xl bg-accent px-6 py-3 font-semibold text-accent-ink hover:brightness-110 disabled:opacity-60">Confirmar reserva</button>
+                <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+              </form>
+            </>
+          ) : (
+            <p class="rounded-lg bg-salvia px-3 py-2 text-sm">Las reservas de esta rifa están cerradas.</p>
+          )}
+          <div data-mis-boletos hidden class="flex flex-wrap items-baseline gap-3 border-t border-line pt-3 text-sm"><span class="text-muted">Tus boletos:</span></div>
         </div>
       </section>
     </div>
@@ -92,6 +126,7 @@ const clases = {
 </Base>
 
 <script>
+  import "../../scripts/rifa-publica.ts";
   const boton = document.querySelector<HTMLButtonElement>("[data-copiar]");
   boton?.addEventListener("click", async () => {
     const texto = document.querySelector("[data-enlace]")?.textContent ?? "";

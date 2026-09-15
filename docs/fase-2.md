@@ -6,10 +6,10 @@ Plan técnico. Cada entrega se puede publicar por separado.
 
 | # | Entrega | Qué incluye |
 |---|---|---|
-| 2.1 | Cuentas | Ingreso con enlace mágico por correo, sesiones, panel vacío |
-| 2.2 | Crear rifa y página pública | Formulario de creación, `/r/:slug` con la grilla de números |
-| 2.3 | Reservas y boleto | Elegir números, reservar sin cuenta, boleto `/boleto/:codigo` |
-| 2.4 | Panel del organizador | Marcar pagado, liberar, WhatsApp, vencimiento automático |
+| 2.1 ✅ | Cuentas | Ingreso con enlace mágico por correo, sesiones, panel vacío |
+| 2.2 ✅ | Crear rifa y página pública | Formulario de creación, `/r/:slug` con la grilla de números |
+| 2.3 ✅ | Reservas y boleto | Elegir números, reservar sin cuenta, boleto `/boleto/:codigo` |
+| 2.4 ✅ | Panel del organizador | Marcar pagado, liberar, WhatsApp, vencimiento automático |
 | 2.5 | Cierre y sorteo | Congelar la lista, sorteo verificable, página de resultados |
 
 ## Decisiones

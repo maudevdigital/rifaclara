@@ -1,0 +1,83 @@
+---
+import Base from "../../layouts/Base.astro";
+import { apiServidor } from "../../lib/api-servidor";
+import { fechaChile, pesos } from "../../lib/formato";
+
+export const prerender = false;
+
+interface Boleto {
+  codigo: string; nombre: string; telefono: string; estado: "pendiente" | "pagada" | "vencida" | "liberada";
+  numeros: string[]; venceEn: number; pagadaEn: number | null;
+  rifa: { slug: string; titulo: string; premios: string[]; precio: number; cierreEn: number; zonaHoraria: string; mediosPago: string; whatsapp: string | null; estado: string };
+}
+const { estado: http, datos: b } = await apiServidor<Boleto>(Astro.request, `/api/reservas/${encodeURIComponent(Astro.params.codigo ?? "")}`);
+if (!b) Astro.response.status = http === 404 ? 404 : 502;
+
+const total = b ? b.numeros.length * b.rifa.precio : 0;
+const estados = {
+  pendiente: ["Pendiente de pago", "bg-pick text-pick-ink"],
+  pagada: ["Pagado", "bg-ok-soft text-ok"],
+  vencida: ["Reserva vencida", "bg-salvia text-muted"],
+  liberada: ["Reserva anulada", "bg-salvia text-muted"],
+} as const;
+const mensajeWhatsapp = b
+  ? `Hola, reservé ${b.numeros.length === 1 ? "el número" : "los números"} ${b.numeros.join(", ")} en la rifa "${b.rifa.titulo}". Mi boleto es ${b.codigo}. Te envío el comprobante de ${pesos(total)}.`
+  : "";
+const whatsapp = b?.rifa.whatsapp ? `https://wa.me/${b.rifa.whatsapp}?text=${encodeURIComponent(mensajeWhatsapp)}` : null;
+const nuevo = Astro.url.searchParams.has("nuevo");
+---
+<Base title={b ? `Boleto ${b.codigo} | Rifa Clara` : "Boleto no encontrado | Rifa Clara"} description="Tu boleto de rifa." noindex>
+  {!b && (
+    <section class="grid gap-4 py-16">
+      <h1 class="text-4xl font-semibold">No encontramos este boleto</h1>
+      <p class="text-muted">Revisa que el código esté completo.</p>
+    </section>
+  )}
+  {b && (
+    <section class="mx-auto grid max-w-xl gap-5 py-6">
+      {nuevo && b.estado === "pendiente" && (
+        <p class="rounded-xl bg-ok-soft px-4 py-3 text-sm font-semibold text-ok">✓ Números reservados. Ahora paga y avísale a quien organiza.</p>
+      )}
+      <article class="overflow-hidden rounded-2xl border border-line bg-surface">
+        <div class="grid gap-3 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <span class="text-xs font-semibold tracking-[.12em] text-muted uppercase">Tu boleto</span>
+            <span class:list={["rounded-full px-2.5 py-1 text-xs font-semibold", estados[b.estado][1]]}>{estados[b.estado][0]}</span>
+          </div>
+          <b class="font-mono text-3xl tracking-wide">{b.codigo}</b>
+          <a href={`/r/${b.rifa.slug}`} class="text-lg font-semibold hover:text-accent">{b.rifa.titulo}</a>
+          <div class="flex flex-wrap gap-2">
+            {b.numeros.map((n) => <span class="rounded-md bg-pick px-2.5 py-1 font-mono text-lg font-semibold text-pick-ink">{n}</span>)}
+          </div>
+          <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <dt class="text-muted">A nombre de</dt><dd>{b.nombre} · {b.telefono}</dd>
+            <dt class="text-muted">Total</dt><dd class="font-mono font-semibold">{pesos(total)}</dd>
+            {b.estado === "pendiente" && <><dt class="text-muted">Paga antes del</dt><dd>{fechaChile(b.venceEn, b.rifa.zonaHoraria)}</dd></>}
+            {b.estado === "pagada" && b.pagadaEn && <><dt class="text-muted">Pago confirmado</dt><dd>{fechaChile(b.pagadaEn, b.rifa.zonaHoraria)}</dd></>}
+            <dt class="text-muted">Sorteo</dt><dd>{fechaChile(b.rifa.cierreEn, b.rifa.zonaHoraria)}</dd>
+          </dl>
+        </div>
+        {b.estado === "pendiente" && (
+          <div class="grid gap-3 border-t-2 border-dashed border-line bg-bg p-5">
+            <span class="text-xs font-semibold tracking-[.12em] text-muted uppercase">Cómo pagar</span>
+            <p class="text-sm leading-relaxed whitespace-pre-line">{b.rifa.mediosPago}</p>
+            <p class="text-xs text-muted">En el asunto de la transferencia escribe <b class="font-mono text-ink">{b.codigo}</b>. Si no pagas antes del plazo, los números se liberan solos.</p>
+            {whatsapp && <a href={whatsapp} target="_blank" rel="noopener" class="justify-self-start rounded-xl bg-accent px-5 py-3 font-semibold text-accent-ink hover:brightness-110">Enviar comprobante por WhatsApp</a>}
+          </div>
+        )}
+        {b.estado === "vencida" && (
+          <p class="border-t border-line p-5 text-sm text-muted">El plazo para pagar terminó y los números se liberaron. Si todavía están libres, puedes <a class="text-accent underline" href={`/r/${b.rifa.slug}`}>reservarlos de nuevo</a>.</p>
+        )}
+      </article>
+      <p class="text-xs text-muted">Guarda este enlace: es tu comprobante de reserva. Después del sorteo, tu código servirá para comprobar que tus números participaron.</p>
+      <button data-copiar type="button" class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Copiar enlace del boleto</button>
+    </section>
+  )}
+</Base>
+
+<script>
+  const boton = document.querySelector<HTMLButtonElement>("[data-copiar]");
+  boton?.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(location.origin + location.pathname); boton.textContent = "Enlace copiado"; } catch {}
+  });
+</script>

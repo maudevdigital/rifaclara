@@ -22,7 +22,8 @@
     { "name": "LIMITE_SORTEOS", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
     { "name": "LIMITE_FORMULARIOS", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } }
   ],
-  // Todos los días a las 07:00 UTC se borran los sorteos de más de 90 días.
-  "triggers": { "crons": ["0 7 * * *"] },
+  // Cada 10 minutos: vencer reservas sin pagar. 07:00 UTC: borrar sorteos de
+  // más de 90 días y sesiones o enlaces vencidos.
+  "triggers": { "crons": ["*/10 * * * *", "0 7 * * *"] },
   "observability": { "enabled": true }
 }

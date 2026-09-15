@@ -4,6 +4,7 @@ import { requiereUsuario } from "./auth";
 import { eventoRifa } from "./eventos";
 import { generarId } from "./lista";
 import { baseDeSlug, esquemaNuevaRifa } from "./rifas-esquema";
+import { mostrarCodigo, vencerReservas } from "./reservas";
 
 interface FilaRifa {
   id: string;
@@ -68,11 +69,31 @@ rifas.get("/", requiereUsuario, async (c) => {
   return c.json({ rifas: results });
 });
 
+/** Una rifa del organizador con todas sus reservas, para el panel. */
+rifas.get("/:id/reservas", requiereUsuario, async (c) => {
+  const r = await c.env.DB.prepare("SELECT * FROM rifas WHERE id = ? AND usuario_id = ?")
+    .bind(c.req.param("id"), c.get("usuario")!.id).first<FilaRifa>();
+  if (!r) return c.json({ error: "No existe esa rifa en tu cuenta." }, 404);
+  await vencerReservas(c.env.DB, r.id);
+  const { results } = await c.env.DB.prepare(
+    `SELECT codigo, nombre, telefono, numeros, estado, vence_en AS venceEn, creado_en AS creadoEn, pagada_en AS pagadaEn
+     FROM reservas WHERE rifa_id = ? ORDER BY (estado = 'pendiente') DESC, creado_en DESC LIMIT 500`,
+  ).bind(r.id).all<{ codigo: string; numeros: string } & Record<string, unknown>>();
+  return c.json({
+    rifa: {
+      id: r.id, slug: r.slug, titulo: r.titulo, estado: r.estado, precio: r.precio, desde: r.desde, hasta: r.hasta,
+      cierreEn: r.cierre_en, zonaHoraria: r.zona_horaria, sorteoId: r.sorteo_id,
+    },
+    reservas: results.map((x) => ({ ...x, codigo: mostrarCodigo(x.codigo), numeros: JSON.parse(x.numeros) as string[] })),
+  });
+});
+
 /** Vista pública: sin datos del organizador ni de los participantes. */
 rifas.get("/publica/:slug", async (c) => {
   const r = await c.env.DB.prepare("SELECT * FROM rifas WHERE slug = ? AND estado != 'cancelada'")
     .bind(c.req.param("slug")).first<FilaRifa>();
   if (!r) return c.json({ error: "No existe esa rifa" }, 404);
+  await vencerReservas(c.env.DB, r.id);
   const { results: tomados } = await c.env.DB.prepare(
     `SELECT n.numero AS n, CASE s.estado WHEN 'pagada' THEN 'p' ELSE 'r' END AS e
      FROM numeros n JOIN reservas s ON s.codigo = n.reserva_codigo

@@ -1,0 +1,105 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { apiServidor } from "../../../lib/api-servidor";
+import { fechaChile, pesos } from "../../../lib/formato";
+
+export const prerender = false;
+
+interface Reserva {
+  codigo: string; nombre: string; telefono: string; numeros: string[];
+  estado: "pendiente" | "pagada" | "vencida" | "liberada"; venceEn: number; creadoEn: number; pagadaEn: number | null;
+}
+interface Datos {
+  rifa: { id: string; slug: string; titulo: string; estado: string; precio: number; desde: number; hasta: number; cierreEn: number; zonaHoraria: string };
+  reservas: Reserva[];
+}
+const { estado, datos } = await apiServidor<Datos>(Astro.request, `/api/rifas/${encodeURIComponent(Astro.params.id ?? "")}/reservas`);
+if (estado === 401) return Astro.redirect("/ingresar");
+if (!datos) Astro.response.status = 404;
+
+const r = datos?.rifa;
+const lista = datos?.reservas ?? [];
+const total = r ? r.hasta - r.desde + 1 : 0;
+const contar = (e: Reserva["estado"]) => lista.filter((x) => x.estado === e).reduce((s, x) => s + x.numeros.length, 0);
+const pagados = contar("pagada");
+const porConfirmar = contar("pendiente");
+const etiqueta = {
+  pendiente: ["Por confirmar", "bg-pick text-pick-ink"],
+  pagada: ["Pagado", "bg-ok-soft text-ok"],
+  vencida: ["Vencida", "bg-salvia text-muted"],
+  liberada: ["Liberada", "bg-salvia text-muted"],
+} as const;
+const hora = (s: number) => new Intl.DateTimeFormat("es-CL", { timeZone: r?.zonaHoraria ?? "America/Santiago", dateStyle: "short", timeStyle: "short" }).format(s * 1000);
+const whatsapp = (x: Reserva) =>
+  `https://wa.me/${x.telefono}?text=${encodeURIComponent(`Hola ${x.nombre}, te escribo por tu reserva ${x.codigo} (números ${x.numeros.join(", ")}) en "${r?.titulo}".`)}`;
+---
+<Base title={r ? `${r.titulo} · Panel | Rifa Clara` : "Rifa no encontrada | Rifa Clara"} description="Administra las reservas de tu rifa." noindex>
+  {!r && <section class="grid gap-4 py-16"><h1 class="text-4xl font-semibold">No encontramos esta rifa en tu cuenta</h1><a class="text-accent underline" href="/panel">Volver a mis rifas</a></section>}
+  {r && (
+    <section class="grid gap-6 py-6">
+      <div class="grid gap-1">
+        <a href="/panel" class="text-sm text-muted hover:text-ink">← Mis rifas</a>
+        <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">{r.titulo}</h1>
+        <p class="text-sm text-muted">Cierra el {fechaChile(r.cierreEn, r.zonaHoraria)} · <a class="text-accent underline" href={`/r/${r.slug}`}>ver página pública</a></p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[["Pagados", pagados], ["Por confirmar", porConfirmar], ["Libres", total - pagados - porConfirmar], ["Recaudado", pesos(pagados * r.precio)]].map(([k, v]) => (
+          <div class="grid gap-1 rounded-xl border border-line bg-surface p-4"><span class="text-xs text-muted">{k}</span><b class="font-mono text-2xl">{v}</b></div>
+        ))}
+      </div>
+
+      <div class="grid gap-3">
+        <h2 class="text-xl font-semibold">Reservas</h2>
+        {lista.length === 0 ? (
+          <p class="rounded-xl border border-dashed border-line p-6 text-muted">Todavía nadie reserva. Comparte el enlace de tu rifa: <code class="font-mono text-ink">{Astro.url.origin}/r/{r.slug}</code></p>
+        ) : (
+          <div class="overflow-x-auto rounded-xl border border-line bg-surface">
+            <table class="w-full text-sm">
+              <thead class="bg-salvia text-left text-xs text-muted uppercase"><tr><th class="px-3 py-2">Boleto</th><th class="px-3 py-2">Participante</th><th class="px-3 py-2">Números</th><th class="px-3 py-2">Total</th><th class="px-3 py-2">Estado</th><th class="px-3 py-2"></th></tr></thead>
+              <tbody>
+                {lista.map((x) => (
+                  <tr class="border-t border-line align-top">
+                    <td class="px-3 py-2.5 font-mono text-xs whitespace-nowrap">{x.codigo}<br /><span class="text-muted">{hora(x.creadoEn)}</span></td>
+                    <td class="px-3 py-2.5">{x.nombre}<br /><a class="font-mono text-xs text-accent underline" href={whatsapp(x)} target="_blank" rel="noopener">+{x.telefono}</a></td>
+                    <td class="px-3 py-2.5 font-mono">{x.numeros.join(" · ")}</td>
+                    <td class="px-3 py-2.5 font-mono whitespace-nowrap">{pesos(x.numeros.length * r.precio)}</td>
+                    <td class="px-3 py-2.5 whitespace-nowrap">
+                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-semibold", etiqueta[x.estado][1]]}>{etiqueta[x.estado][0]}</span>
+                      {x.estado === "pendiente" && <span class="block pt-1 text-xs text-muted">vence {hora(x.venceEn)}</span>}
+                    </td>
+                    <td class="px-3 py-2.5 whitespace-nowrap">
+                      {x.estado === "pendiente" && r.estado === "abierta" && (
+                        <span class="flex gap-2">
+                          <button data-accion="pagar" data-codigo={x.codigo} type="button" class="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink hover:brightness-110">Marcar pagado</button>
+                          <button data-accion="liberar" data-codigo={x.codigo} type="button" class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold hover:border-danger hover:text-danger">Liberar</button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p data-mensaje aria-live="polite" class="min-h-5 text-sm"></p>
+        <p class="text-xs text-muted">Cada cambio queda en el registro de la rifa con fecha y hora. Las reservas sin pagar se liberan solas al vencer su plazo.</p>
+      </div>
+    </section>
+  )}
+</Base>
+
+<script>
+  const mensaje = document.querySelector<HTMLElement>("[data-mensaje]");
+  document.querySelectorAll<HTMLButtonElement>("[data-accion]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const { accion, codigo } = b.dataset;
+      if (accion === "liberar" && !confirm(`¿Liberar los números de ${codigo}? La persona perderá su reserva.`)) return;
+      b.disabled = true;
+      const res = await fetch(`/api/reservas/${codigo}/${accion}`, { method: "POST" });
+      const datos = await res.json().catch(() => ({}));
+      if (res.ok) location.reload();
+      else if (mensaje) { mensaje.className = "min-h-5 text-sm text-danger"; mensaje.textContent = datos.error ?? "No se pudo hacer el cambio"; b.disabled = false; }
+    });
+  });
+</script>

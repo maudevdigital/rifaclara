@@ -50,7 +50,7 @@ const etiquetas: Record<string, [string, string]> = {
               <p class="text-sm text-muted">{total} números a {pesos(r.precio)} · cierra el {fechaChile(r.cierreEn)}</p>
               <div class="h-1.5 overflow-hidden rounded-full bg-sold"><b class="block h-full rounded-full bg-ok" style={`width:${(r.pagados / total) * 100}%`}></b></div>
               <p class="font-mono text-xs text-muted">{r.pagados} pagados · {r.reservados} por confirmar · {total - r.pagados - r.reservados} libres</p>
-              <a href={`/r/${r.slug}`} class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Ver página pública</a>
+              <span class="flex flex-wrap gap-4"><a href={`/panel/rifas/${r.id}`} class="text-sm font-semibold text-accent underline underline-offset-2">Administrar reservas</a><a href={`/r/${r.slug}`} class="text-sm font-semibold text-accent underline underline-offset-2">Ver página pública</a></span>
             </li>
           );
         })}
