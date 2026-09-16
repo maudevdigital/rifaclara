@@ -124,7 +124,10 @@ const motivos = [
                 {r.organizador.sorteadas > 0 && ` · ${r.organizador.sorteadas} sorteada${r.organizador.sorteadas === 1 ? "" : "s"} con comprobante`}
                 {" · "}en Rifa Clara desde {mesAno(r.organizador.desde)}
               </p>
-              <a href={`/organizador/${r.organizador.alias}`} class="justify-self-start text-sm font-semibold text-accent underline underline-offset-2">Ver su historial</a>
+              <span class="flex flex-wrap gap-4">
+                <a href={`/organizador/${r.organizador.alias}`} class="text-sm font-semibold text-accent underline underline-offset-2">Ver su historial</a>
+                <a href={`/r/${r.slug}/registro`} class="text-sm font-semibold text-accent underline underline-offset-2">Registro de esta rifa</a>
+              </span>
             </div>
           )}
         </div>

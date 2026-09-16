@@ -180,7 +180,9 @@ Cuentas, asistente de creación, página pública, grilla, reservas, boleto, pan
 Listo cuando: una rifa real de 100 números se crea, se vende y se sortea de principio a fin.
 
 **Fase 3 · Confianza y difusión (semanas 8–9)**
-Imágenes OG por rifa ✔, grilla en tiempo real ✔, historial del organizador y denuncias ✔, OpenTimestamps, registro público de cambios.
+Imágenes OG por rifa ✔, grilla en tiempo real ✔, historial del organizador y denuncias ✔, OpenTimestamps y registro público de cambios ✔. Fase 3 completa.
+
+El registro de cada rifa vive en `/r/:slug/registro`: muestra las anotaciones encadenadas por hash y las vuelve a calcular en el navegador de quien mira. Cuando la rifa termina, el cron guarda el registro en R2 (`rifas/{id}/registro.json`) y sella su sha256 con OpenTimestamps en dos calendarios; el `.ots` queda descargable y se verifica con la herramienta oficial (`ots upgrade` y `ots verify`), sin pasar por Rifa Clara. `api/src/ots.ts` implementa solo la creación del sello: cabecera mágica, versión, operación sha256, huella y la respuesta de cada calendario.
 
 El historial vive en `/organizador/:alias` (sin indexar) y se arma solo con lo que pasó en cada rifa: publicadas, sorteadas y canceladas. Las denuncias las envía cualquiera desde la rifa, con motivo de una lista cerrada; quedan anotadas en el registro de la rifa solo con el motivo, avisan por correo a `ADMIN_CORREO` y se revisan en `/panel/denuncias`, que puede cancelar la rifa.
 

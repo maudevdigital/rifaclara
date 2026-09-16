@@ -10,6 +10,7 @@ import { pagos } from "./pagos";
 import { imagenes } from "./imagenes";
 import { organizadores } from "./organizadores";
 import { denuncias } from "./denuncias";
+import { procesarSellos } from "./registro";
 
 // Sin ruta pública: todo llega desde rifaclara-web por el service binding API,
 // que reenvía rifaclara.maudev.cl/api/* tal cual (cookies incluidas).
@@ -50,7 +51,8 @@ app.onError((e, c) => {
 export default {
   fetch: app.fetch,
   async scheduled(evento, env, ctx) {
-    ctx.waitUntil(vencerReservas(env.DB).then(() => procesarCierres(env.DB)));
+    // Cerrar y sortear primero; después sellar los registros que ya quedaron firmes.
+    ctx.waitUntil(vencerReservas(env.DB).then(() => procesarCierres(env.DB)).then(() => procesarSellos(env)));
     const hora = new Date(evento.scheduledTime);
     if (hora.getUTCHours() === 7 && hora.getUTCMinutes() < 10) {
       ctx.waitUntil(Promise.all([borrarAntiguos(env.DB), limpiarAuth(env.DB)]));

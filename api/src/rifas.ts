@@ -8,6 +8,7 @@ import { mostrarCodigo, vencerReservas } from "./reservas";
 import { avanzarRifa } from "./cierre";
 import { resolverSorteo } from "./sorteos";
 import { resumenOrganizador } from "./organizadores";
+import { claveRegistro, claveSello, construirRegistro, eventosDe } from "./registro";
 import { sha256, tramoPara } from "@rifaclara/shared";
 
 interface FilaRifa {
@@ -152,6 +153,58 @@ rifas.get("/publica/:slug/estado", async (c) => {
   // Al comprimir, Cloudflare puede volver débil el ETag (W/"..."): da lo mismo para comparar.
   if (c.req.header("if-none-match")?.replace(/^W\//, "") === etag) return c.body(null, 304, cabeceras);
   return c.body(cuerpo, 200, { ...cabeceras, "content-type": "application/json" });
+});
+
+/** Registro público: todo lo que pasó en la rifa, con el estado del sello. */
+rifas.get("/publica/:slug/registro", async (c) => {
+  const r = await c.env.DB.prepare(
+    `SELECT id, slug, titulo, estado, sello_estado AS selloEstado, sello_en AS selloEn,
+       sello_huella AS selloHuella, sello_calendarios AS selloCalendarios
+     FROM rifas WHERE slug = ? AND estado != 'cancelada'`,
+  ).bind(c.req.param("slug")).first<{
+    id: string; slug: string; titulo: string; estado: string;
+    selloEstado: string | null; selloEn: number | null; selloHuella: string | null; selloCalendarios: string | null;
+  }>();
+  if (!r) return c.json({ error: "No existe esa rifa" }, 404);
+  return c.json({
+    rifa: { slug: r.slug, titulo: r.titulo, estado: r.estado },
+    eventos: await eventosDe(c.env.DB, r.id),
+    sello: {
+      estado: r.selloEstado ?? (r.estado === "sorteada" || r.estado === "cerrada" ? "pendiente" : "en_curso"),
+      en: r.selloEn,
+      huella: r.selloHuella,
+      calendarios: r.selloCalendarios ? (JSON.parse(r.selloCalendarios) as string[]) : [],
+    },
+  });
+});
+
+/** El archivo del registro: sellado si ya terminó, o al día si sigue abierta. */
+rifas.get("/publica/:slug/registro.json", async (c) => {
+  const r = await c.env.DB.prepare("SELECT id, slug, sello_estado AS sello FROM rifas WHERE slug = ? AND estado != 'cancelada'")
+    .bind(c.req.param("slug")).first<{ id: string; slug: string; sello: string | null }>();
+  if (!r) return c.json({ error: "No existe esa rifa" }, 404);
+  const guardado = r.sello === "sellado" ? await c.env.FOTOS.get(claveRegistro(r.id)) : null;
+  const cuerpo = guardado ? await guardado.text() : await construirRegistro(c.env.DB, r.id, c.env.SITIO);
+  if (!cuerpo) return c.json({ error: "No existe esa rifa" }, 404);
+  return c.body(cuerpo, 200, {
+    "content-type": "application/json; charset=utf-8",
+    "content-disposition": `attachment; filename="registro-${r.slug}.json"`,
+    "cache-control": guardado ? "public, max-age=3600" : "no-store",
+  });
+});
+
+/** El comprobante OpenTimestamps del registro, para verificar con la herramienta oficial. */
+rifas.get("/publica/:slug/registro.ots", async (c) => {
+  const r = await c.env.DB.prepare("SELECT id, slug FROM rifas WHERE slug = ? AND estado != 'cancelada'")
+    .bind(c.req.param("slug")).first<{ id: string; slug: string }>();
+  if (!r) return c.json({ error: "No existe esa rifa" }, 404);
+  const archivo = await c.env.FOTOS.get(claveSello(r.id));
+  if (!archivo) return c.json({ error: "Esta rifa todavía no tiene sello." }, 404);
+  return c.body(archivo.body, 200, {
+    "content-type": "application/octet-stream",
+    "content-disposition": `attachment; filename="registro-${r.slug}.json.ots"`,
+    "cache-control": "public, max-age=31536000, immutable",
+  });
 });
 
 /** Vista pública: sin datos del organizador ni de los participantes. */

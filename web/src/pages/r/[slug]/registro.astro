@@ -1,0 +1,139 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { apiServidor } from "../../../lib/api-servidor";
+import { fechaChile } from "../../../lib/formato";
+
+export const prerender = false;
+
+interface Evento { id: number; tipo: string; datos: string | null; hashAnterior: string | null; hash: string; creadoEn: number }
+interface Datos {
+  rifa: { slug: string; titulo: string; estado: string };
+  eventos: Evento[];
+  sello: { estado: string; en: number | null; huella: string | null; calendarios: string[] };
+}
+const slug = Astro.params.slug ?? "";
+const { estado, datos } = await apiServidor<Datos>(Astro.request, `/api/rifas/publica/${encodeURIComponent(slug)}/registro`);
+if (!datos) Astro.response.status = estado === 404 ? 404 : 502;
+
+const nombres: Record<string, string> = {
+  creada: "Se creó la rifa",
+  plan_pagado: "Se pagó la publicación",
+  foto_actualizada: "Se cambió la foto del premio",
+  tarjeta_actualizada: "Se cambió la imagen para compartir",
+  reservada: "Alguien reservó números",
+  pagada: "Se confirmó un pago",
+  liberada: "Se liberó una reserva",
+  reserva_vencida: "Venció una reserva",
+  cerrada: "Cerró y se congeló la lista del sorteo",
+  cerrada_sin_ventas: "Cerró sin números pagados",
+  sorteada: "Salió el resultado del sorteo",
+  denuncia: "Llegó un reporte",
+  cancelada: "Se canceló la rifa",
+};
+// Dentro de <script type="application/json"> hay que evitar que un "<" corte la etiqueta.
+const eventosJson = JSON.stringify(datos?.eventos ?? []).replace(/</g, "\\u003c");
+const sello = datos?.sello;
+const archivo = `/api/rifas/publica/${encodeURIComponent(slug)}/registro.json`;
+const comprobante = `/api/rifas/publica/${encodeURIComponent(slug)}/registro.ots`;
+---
+<Base
+  title={datos ? `Registro de ${datos.rifa.titulo} | Rifa Clara` : "Registro no encontrado | Rifa Clara"}
+  description="Todo lo que pasó en esta rifa, encadenado por hash y sellado en la cadena de Bitcoin."
+  noindex
+>
+  {!datos && (
+    <section class="grid gap-4 py-16">
+      <h1 class="text-4xl font-semibold">No encontramos este registro</h1>
+      <p class="text-muted">Revisa el enlace de la rifa.</p>
+    </section>
+  )}
+  {datos && sello && (
+    <section class="grid gap-8 py-6">
+      <div class="grid gap-2">
+        <span class="text-sm font-semibold tracking-[.14em] text-muted uppercase">Registro de la rifa</span>
+        <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">{datos.rifa.titulo}</h1>
+        <p><a href={`/r/${slug}`} class="text-accent underline underline-offset-2">Volver a la rifa</a></p>
+      </div>
+
+      <div class="grid max-w-[70ch] gap-3 text-muted">
+        <p>
+          Cada cosa que pasa en una rifa queda anotada aquí en orden, y cada anotación lleva el
+          resumen de la anterior. Es como una hoja donde cada línea repite en clave lo que decía la
+          línea de arriba: si alguien borra o cambia una, las siguientes dejan de calzar.
+        </p>
+        <p>
+          Cuando la rifa termina, guardamos este registro completo y mandamos su resumen a la cadena
+          de Bitcoin con OpenTimestamps. Eso deja una fecha que no depende de nosotros:
+          <b class="text-ink"> ni Rifa Clara ni quien organiza pueden cambiar algo después y hacerlo pasar por el original.</b>
+        </p>
+      </div>
+
+      <div data-verificacion class="grid gap-2 rounded-2xl border border-line bg-surface p-5">
+        <b>Comprobación en tu propio navegador</b>
+        <p data-resultado class="text-sm text-muted">Revisando las {datos.eventos.length} anotaciones…</p>
+        <p class="text-sm text-muted">Se rehace el cálculo aquí mismo, en tu equipo, sin preguntarnos nada a nosotros.</p>
+      </div>
+
+      <div class="grid gap-3 rounded-2xl border border-line bg-surface p-5">
+        <b>Sello en la cadena de Bitcoin</b>
+        {sello.estado === "sellado" ? (
+          <>
+            <p class="text-sm">Sellado el <b>{fechaChile(sello.en!)}</b> en {sello.calendarios.length === 1 ? "un calendario" : `${sello.calendarios.length} calendarios`} de OpenTimestamps.</p>
+            <p class="font-mono text-xs break-all text-muted">Huella sellada: {sello.huella}</p>
+            <div class="flex flex-wrap gap-3">
+              <a href={archivo} class="rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-accent">Descargar el registro</a>
+              <a href={comprobante} class="rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-accent">Descargar el comprobante</a>
+            </div>
+            <details class="mt-2 text-sm">
+              <summary class="cursor-pointer text-muted hover:text-ink">Cómo comprobarlo por tu cuenta, sin Rifa Clara</summary>
+              <div class="mt-3 grid gap-2 text-muted">
+                <p>Con la herramienta oficial del proyecto OpenTimestamps, que no tiene nada que ver con nosotros:</p>
+                <pre class="overflow-x-auto rounded-xl bg-bg p-3 font-mono text-xs text-ink"><code>pip install opentimestamps-client
+ots upgrade registro-{slug}.json.ots
+ots verify registro-{slug}.json.ots</code></pre>
+                <p>
+                  Los dos archivos van en la misma carpeta y con estos nombres. La anotación en Bitcoin
+                  tarda unas horas en confirmarse: hasta entonces la herramienta dirá que el sello está
+                  pendiente en el calendario. Después dirá la fecha y el bloque exactos.
+                </p>
+              </div>
+            </details>
+          </>
+        ) : sello.estado === "pendiente" ? (
+          <p class="text-sm text-muted">La rifa ya terminó y el sello está en camino: se hace en la siguiente pasada automática, dentro de unos minutos.</p>
+        ) : (
+          <p class="text-sm text-muted">Esta rifa sigue en curso. El registro se sella cuando termine, porque recién ahí queda cerrado. Mientras tanto puedes <a href={archivo} class="text-accent underline">descargar el registro al día</a>.</p>
+        )}
+      </div>
+
+      <div class="grid gap-3">
+        <h2 class="text-xl font-semibold">Lo que pasó ({datos.eventos.length})</h2>
+        <ol class="grid gap-2">
+          {datos.eventos.map((e) => (
+            <li data-evento={e.id} class="grid gap-1 rounded-xl border border-line bg-surface px-4 py-3">
+              <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <b class="text-sm">{nombres[e.tipo] ?? e.tipo}</b>
+                <span class="font-mono text-xs text-muted">{fechaChile(e.creadoEn)}</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span data-estado class="font-mono text-xs text-muted">·</span>
+                <span class="font-mono text-xs break-all text-muted">{e.hash.slice(0, 24)}…</span>
+              </div>
+              {e.datos && e.datos !== "null" && e.datos !== "{}" && (
+                <details class="text-xs">
+                  <summary class="cursor-pointer text-muted hover:text-ink">Ver el detalle anotado</summary>
+                  <pre class="mt-2 overflow-x-auto rounded-lg bg-bg p-3 font-mono text-[11px] whitespace-pre-wrap text-muted">{e.datos}</pre>
+                </details>
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )}
+</Base>
+
+{datos && <script type="application/json" data-eventos set:html={eventosJson}></script>}
+<script>
+  import "../../../scripts/verificar-registro.ts";
+</script>
