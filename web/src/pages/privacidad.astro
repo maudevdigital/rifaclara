@@ -14,14 +14,31 @@ const actualizada = "15 de septiembre de 2026";
       <table>
         <thead><tr><th>Dónde</th><th>Qué se guarda</th><th>Para qué</th><th>Cuánto tiempo</th></tr></thead>
         <tbody>
-          <tr><td>Ruleta en modo rápido</td><td>Nada en nuestros servidores. La lista queda en tu navegador.</td><td>Que no pierdas tu lista al recargar</td><td>Hasta que la borres</td></tr>
-          <tr><td>Sorteos verificables</td><td>La lista sorteada, su huella, la ronda de drand y el resultado</td><td>Que cualquiera con el enlace pueda comprobar el sorteo</td><td>90 días; después se borran solos</td></tr>
-          <tr><td>Plantilla de rifa</td><td>Nada. El PDF se arma en tu navegador.</td><td>—</td><td>—</td></tr>
-          <tr><td>Lista de espera</td><td>Tu correo, quién organiza, el tamaño de tus rifas y tu respuesta sobre el precio</td><td>Avisarte cuando puedas crear tu rifa y saber si el servicio es útil</td><td>Hasta 12 meses después del lanzamiento, o hasta que pidas la baja</td></tr>
+          <tr><td>Tu cuenta de organizador</td><td>Tu correo, el nombre público que elijas y la fecha en que entraste</td><td>Entrar sin contraseña y mostrar tu historial en tus rifas</td><td>Mientras tengas la cuenta</td></tr>
+          <tr><td>Rifas que creas</td><td>Título, premios, precio, números, instrucciones de pago, WhatsApp si lo pones y las fotos que subas</td><td>Publicar tu rifa y que la gente pueda comprar números</td><td>Mientras exista la rifa</td></tr>
+          <tr><td>Reservas de quien compra</td><td>Nombre y WhatsApp, más los números elegidos</td><td>Que quien organiza sepa a quién cobrarle y a quién entregarle el premio. Solo lo ve quien organiza esa rifa</td><td>Mientras exista la rifa</td></tr>
+          <tr><td>Pago de la publicación</td><td>El identificador de la orden y si quedó pagada. La tarjeta la procesa Flow: nosotros no la vemos ni la guardamos</td><td>Publicar las rifas de más de 100 números</td><td>Mientras exista la rifa</td></tr>
+          <tr><td>Registro de la rifa</td><td>Lo que fue pasando: creación, reservas, pagos, cierre y sorteo. En la parte pública los boletos aparecen en clave, sin nombres ni teléfonos</td><td>Que cualquiera pueda comprobar que el sorteo no se arregló</td><td>Queda como comprobante: ver el aviso más abajo</td></tr>
+          <tr><td>Reportes de rifas</td><td>El motivo, lo que escribas y el contacto que dejes, si dejas uno</td><td>Revisar rifas con problemas. En el registro público queda solo el motivo, nunca quién reportó</td><td>Hasta 12 meses</td></tr>
+          <tr><td>Boletos en tu navegador</td><td>Los códigos de los boletos que reservaste, en tu propio equipo</td><td>Que puedas volver a encontrar tu boleto</td><td>Hasta que borres los datos de tu navegador</td></tr>
+          <tr><td>Ruleta en modo rápido</td><td>Nada en nuestros servidores. La lista queda en tu navegador</td><td>Que no pierdas tu lista al recargar</td><td>Hasta que la borres</td></tr>
+          <tr><td>Sorteos de las herramientas</td><td>La lista sorteada, su huella, la ronda de drand y el resultado</td><td>Que cualquiera con el enlace pueda comprobar el sorteo</td><td>90 días; después se borran solos</td></tr>
+          <tr><td>Plantilla de rifa</td><td>Nada. El PDF se arma en tu navegador</td><td>—</td><td>—</td></tr>
         </tbody>
       </table>
 
-      <p>No vendemos ni compartimos tus datos. Los servidores y la base de datos son de Cloudflare. Por ahora no usamos cookies de publicidad; si más adelante mostramos anuncios, te pediremos permiso antes.</p>
+      <h2>Cookies</h2>
+      <p>No tenemos publicidad ni medidores de terceros, así que no verás un cartel pidiéndote permiso: lo único que Rifa Clara deja en tu equipo hace falta para que funcione lo que pediste.</p>
+      <ul>
+        <li><b>Una cookie de sesión</b> (<code>rc_sesion</code>) cuando entras a tu cuenta: guarda solo un identificador al azar, para no pedirte el enlace de ingreso en cada página. Dura 30 días o hasta que toques Salir.</li>
+        <li><b>Los códigos de tus boletos</b>, guardados por tu navegador para que los encuentres después. No salen de tu equipo.</li>
+      </ul>
+
+      <h2>El comprobante de una rifa terminada</h2>
+      <p>Cuando una rifa termina, guardamos su registro y sellamos su huella con OpenTimestamps, que la ancla en la cadena de Bitcoin. Eso es lo que hace que el resultado se pueda comprobar años después, y por lo mismo <b>ese comprobante no se puede deshacer</b>. En él no van nombres ni teléfonos: los boletos aparecen en clave. Si necesitas que borremos tus datos personales, escríbenos: podemos sacarlos de la plataforma, pero el comprobante ya sellado queda como está.</p>
+
+      <h2>Con quién trabajamos</h2>
+      <p>No vendemos ni compartimos tus datos. Nos apoyamos en <b>Cloudflare</b> (servidores y base de datos), <b>Resend</b> (los correos que te enviamos), <b>Flow</b> (el pago de la publicación) y los calendarios públicos de <b>OpenTimestamps</b>, que solo reciben una huella de letras y números, sin ningún dato tuyo.</p>
 
       <h2>Tus derechos</h2>
       <p>Puedes pedir ver, corregir o borrar tus datos, u oponerte a que los usemos. Escríbenos desde <a href="https://maudev.cl/contacto">maudev.cl/contacto</a> indicando el correo que usaste, y te responderemos lo antes posible.</p>
